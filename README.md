@@ -28,33 +28,33 @@ graph TD
     classDef agent fill:#f59e0b,stroke:#b45309,stroke-width:2px,color:#fff;
     
     %% Components
-    subgraph Client Layer [Client Layer - React SPA]
+    subgraph client_layer ["Client Layer - React SPA"]
         A[Sidebar Layout]
         B[LoginPage]
         C[Environments Dashboard]
         D[EOD Orchestration UI]
     end
     
-    subgraph Application Layer [Application Layer - Express API Server]
+    subgraph app_layer ["Application Layer - Express API Server"]
         E[Auth Middleware]
         F[Plugin Registry]
         G[Environments Service]
         H[EOD Execution Engine]
     end
 
-    subgraph Database Layer [Persistence Layer]
+    subgraph db_layer ["Persistence Layer"]
         I[(PostgreSQL DB)]
     end
 
-    subgraph Server Agent Layer [Finacle Server Agents]
+    subgraph agent_layer ["Finacle Server Agents"]
         J[Python Agent - APP 01]
         K[Python Agent - APP 02]
     end
 
     %% Connections
-    Client Layer -->|HTTPS / JWT Auth| Application Layer
-    Application Layer -->|Prisma Client| Database Layer
-    Application Layer -->|Secure REST Trigger| Server Agent Layer
+    client_layer -->|HTTPS / JWT Auth| app_layer
+    app_layer -->|Prisma Client| db_layer
+    app_layer -->|Secure REST Trigger| agent_layer
     
     class A,B,C,D client;
     class E,F,G,H app;
