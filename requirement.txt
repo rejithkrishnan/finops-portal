@@ -1,0 +1,44 @@
+I am creating an ops portal for finacle in axis bank
+
+Lets create this in react for front end 
+and backend we can have postgres db
+
+This portal should have multiple functionalities for example 
+1. EOD execution
+2. service monitoring 
+3. jobs status and monitoring through DB
+4. Environemtn maintennce( basically we will store env details and servers associalkted with each env)
+In future additional functionalits alos we have to add 
+
+So a configurable framework wehere we can easily plugin new apps to the portal should be possible 
+
+We will start with EOD execution 
+
+To support this This application should have 3 layers
+1. Front end where we can initate and monotri the job 
+2. Application layer where entore processing and connection to db to store everything happens 
+3. An agent( can be python http agent) which runs in the finacel server, which should accept the request from application layer and execute the eod in finacle server.  
+
+For this 2 work we will have to fiurst configure environment tab which will be the source details for which all server we have to connect to and all
+
+Attached si few sample env details screen shot i have used
+
+Lets start with designing and creating the environment tab
+Also app should have user login and authentication functionalities. 
+
+Lets prepare a detailed design document of this 
+Ask me any doubts and clarification you will require for designing the app
+
+Is react the best suited for this or some better approach is there? 
+
+I tried with django, though it is satisfactory, it is not giving a modern feet
+
+For styling use trailwind css 
+
+One point to note is pc in my bank is offline pc, i cannot download any npm packages directlyu from internet 
+
+So anything we are developing here, we should maintain an offline repo of the same and alter we should be able to transfer it tot he offline pc
+for furthert development in office pc
+
+
+Finally we should be able to docekrise the entire stuff and load into docekr env as image( this also shoulkdbe done from offline pc)

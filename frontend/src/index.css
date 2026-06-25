@@ -1,0 +1,139 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── Base Styles ────────────────────────────────────────────────── */
+@layer base {
+  * {
+    @apply border-surface-700/30;
+  }
+
+  body {
+    @apply bg-surface-950 text-surface-100 font-sans antialiased;
+    font-feature-settings: 'cv11', 'ss01', 'ss03';
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    @apply w-1.5;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-surface-900;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-surface-600 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-surface-500;
+  }
+}
+
+/* ─── Component Styles ───────────────────────────────────────────── */
+@layer components {
+  /* Glass card effect */
+  .glass-card {
+    @apply bg-surface-800/50 backdrop-blur-md border border-surface-700/50 rounded-xl shadow-lg;
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-200 ease-out;
+  }
+
+  .glass-card-hover:hover {
+    @apply bg-surface-800/70 border-surface-600/50 shadow-xl -translate-y-0.5;
+  }
+
+  /* Glow effects for badges */
+  .badge-glow {
+    @apply relative;
+  }
+
+  .badge-glow::after {
+    content: '';
+    @apply absolute inset-0 rounded-full opacity-20 blur-sm;
+    background: inherit;
+  }
+
+  /* Shimmer loading effect */
+  .shimmer {
+    @apply relative overflow-hidden;
+    background: linear-gradient(
+      90deg,
+      theme('colors.surface.800') 0%,
+      theme('colors.surface.700') 50%,
+      theme('colors.surface.800') 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s ease-in-out infinite;
+  }
+
+  /* Button styles */
+  .btn-primary {
+    @apply px-4 py-2 bg-brand-600 hover:bg-brand-500 text-white font-medium rounded-lg
+           transition-all duration-150 ease-out active:scale-[0.98]
+           focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:ring-offset-2 focus:ring-offset-surface-900;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 bg-surface-700 hover:bg-surface-600 text-surface-200 font-medium rounded-lg
+           border border-surface-600 transition-all duration-150 ease-out active:scale-[0.98]
+           focus:outline-none focus:ring-2 focus:ring-surface-500/50 focus:ring-offset-2 focus:ring-offset-surface-900;
+  }
+
+  .btn-danger {
+    @apply px-4 py-2 bg-red-600/80 hover:bg-red-500 text-white font-medium rounded-lg
+           transition-all duration-150 ease-out active:scale-[0.98]
+           focus:outline-none focus:ring-2 focus:ring-red-500/50 focus:ring-offset-2 focus:ring-offset-surface-900;
+  }
+
+  .btn-ghost {
+    @apply px-4 py-2 text-surface-300 hover:text-surface-100 hover:bg-surface-800 font-medium rounded-lg
+           transition-all duration-150 ease-out active:scale-[0.98];
+  }
+
+  /* Input styles */
+  .input-field {
+    @apply w-full px-3 py-2 bg-surface-800/80 border border-surface-600/50 rounded-lg
+           text-surface-100 placeholder-surface-500
+           transition-all duration-200 ease-out
+           focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/60
+           hover:border-surface-500/50;
+  }
+
+  /* Table styles */
+  .table-row {
+    @apply border-b border-surface-700/30 transition-colors duration-100
+           hover:bg-surface-800/50;
+  }
+
+  /* Nav item */
+  .nav-item {
+    @apply flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium
+           text-surface-400 hover:text-surface-100 hover:bg-surface-800/50
+           transition-all duration-150 ease-out cursor-pointer;
+  }
+
+  .nav-item-active {
+    @apply text-brand-400 bg-brand-500/10 hover:bg-brand-500/15;
+  }
+}
+
+/* ─── Utility Animations ─────────────────────────────────────────── */
+@layer utilities {
+  .stagger-1 { animation-delay: 50ms; }
+  .stagger-2 { animation-delay: 100ms; }
+  .stagger-3 { animation-delay: 150ms; }
+  .stagger-4 { animation-delay: 200ms; }
+  .stagger-5 { animation-delay: 250ms; }
+  .stagger-6 { animation-delay: 300ms; }
+}
