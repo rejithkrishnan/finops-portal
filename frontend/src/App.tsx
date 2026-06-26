@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import EnvironmentsPage from './pages/EnvironmentsPage';
 import SettingsPage from './pages/SettingsPage';
+import CalendarPage from './pages/CalendarPage';
 
 // Protected route wrapper
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
@@ -56,6 +57,7 @@ function AppRoutes() {
       >
         <Route index element={<DashboardPage />} />
         <Route path="environments" element={<EnvironmentsPage />} />
+        <Route path="calendar" element={<CalendarPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

@@ -4,6 +4,7 @@ import { config } from './core/config';
 import { errorHandler, notFoundHandler } from './core/middleware/errorHandler';
 import authRoutes from './core/auth/authRoutes';
 import environmentsRoutes from './plugins/environments/routes';
+import calendarRoutes from './plugins/calendar/routes';
 
 const app = express();
 
@@ -22,6 +23,7 @@ app.use('/api/auth', authRoutes);
 
 // ─── API Routes ───────────────────────────────────────────────────
 app.use('/api', environmentsRoutes);
+app.use('/api', calendarRoutes);
 
 async function bootstrap() {
 

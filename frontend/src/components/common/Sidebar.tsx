@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import {
   LayoutDashboard,
   Server,
+  Calendar,
   PlayCircle,
   Activity,
   ListChecks,
@@ -13,11 +14,12 @@ import {
 import { useSidebar } from '../../contexts/useSidebar';
 
 const navItems = [
-  { path: '/', icon: LayoutDashboard, label: 'Dashboard', disabled: false },
-  { path: '/environments', icon: Server, label: 'Environments', disabled: false },
-  { path: '/eod', icon: PlayCircle, label: 'EOD Execution', disabled: true },
-  { path: '/monitoring', icon: Activity, label: 'Services', disabled: true },
-  { path: '/jobs', icon: ListChecks, label: 'Jobs', disabled: true },
+  { path: '/',             icon: LayoutDashboard, label: 'Dashboard',     disabled: false },
+  { path: '/environments', icon: Server,          label: 'Environments',  disabled: false },
+  { path: '/calendar',     icon: Calendar,        label: 'Calendar',      disabled: false },
+  { path: '/eod',          icon: PlayCircle,      label: 'EOD Execution', disabled: true  },
+  { path: '/monitoring',   icon: Activity,        label: 'Services',      disabled: true  },
+  { path: '/jobs',         icon: ListChecks,      label: 'Jobs',          disabled: true  },
 ];
 
 export default function Sidebar() {

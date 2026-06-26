@@ -1,19 +1,21 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
-  Sliders, Server, Activity, PlayCircle, Plus, Edit3, Trash2, ShieldAlert
+  Sliders, Server, Activity, PlayCircle, Plus, Edit3, Trash2, CalendarDays,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import * as envService from '../services/envService';
+import * as calendarService from '../services/calendarService';
 import type { ServerRole } from '../types/environment';
 import type { EnvType } from '../services/envService';
+import type { ActivityCategory } from '../types/calendar';
 import Modal from '../components/common/Modal';
 import { useAuth } from '../contexts/AuthContext';
 
 export default function SettingsPage() {
   const { user } = useAuth();
   const isAdmin = user?.role === 'ADMIN';
-  const [activeTab, setActiveTab] = useState<'general' | 'environments' | 'services' | 'eod'>('environments');
+  const [activeTab, setActiveTab] = useState<'general' | 'environments' | 'calendar' | 'services' | 'eod'>('environments');
 
   // Database settings lists
   const [envTypes, setEnvTypes] = useState<EnvType[]>([]);
@@ -29,6 +31,13 @@ export default function SettingsPage() {
   const [showEditRole, setShowEditRole] = useState(false);
   const [selectedRoleForEdit, setSelectedRoleForEdit] = useState<ServerRole | null>(null);
 
+  // Calendar categories state
+  const [categories, setCategories] = useState<ActivityCategory[]>([]);
+  const [showAddCategory, setShowAddCategory] = useState(false);
+  const [showEditCategory, setShowEditCategory] = useState(false);
+  const [selectedCategoryForEdit, setSelectedCategoryForEdit] = useState<ActivityCategory | null>(null);
+  const [categoryForm, setCategoryForm] = useState({ name: '', color: '#97144d', icon: '' });
+
   // Forms values
   const [envTypeForm, setEnvTypeForm] = useState({ name: '', description: '' });
   const [roleForm, setRoleForm] = useState({ name: '', color: '#97144d', description: '' });
@@ -40,12 +49,14 @@ export default function SettingsPage() {
 
   const loadSettingsData = async () => {
     try {
-      const [envTypeData, roleData] = await Promise.all([
+      const [envTypeData, roleData, catData] = await Promise.all([
         envService.getEnvTypes(),
         envService.getServerRoles(),
+        calendarService.getCategories(),
       ]);
       setEnvTypes(envTypeData);
       setRoles(roleData);
+      setCategories(catData);
     } catch {
       toast.error('Failed to load settings configuration');
     } finally {
@@ -137,6 +148,46 @@ export default function SettingsPage() {
     }
   };
 
+  // ─── Activity Category CRUD ──────────────────────────────────────
+  const handleCreateCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await calendarService.createCategory(categoryForm);
+      toast.success('Category added');
+      setShowAddCategory(false);
+      setCategoryForm({ name: '', color: '#97144d', icon: '' });
+      loadSettingsData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error?.message || 'Failed to add category');
+    }
+  };
+
+  const handleUpdateCategory = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedCategoryForEdit) return;
+    try {
+      await calendarService.updateCategory(selectedCategoryForEdit.id, categoryForm);
+      toast.success('Category updated');
+      setShowEditCategory(false);
+      setSelectedCategoryForEdit(null);
+      setCategoryForm({ name: '', color: '#97144d', icon: '' });
+      loadSettingsData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error?.message || 'Failed to update category');
+    }
+  };
+
+  const handleDeleteCategory = async (id: number) => {
+    if (!confirm('Delete this activity category?')) return;
+    try {
+      await calendarService.deleteCategory(id);
+      toast.success('Category deleted');
+      loadSettingsData();
+    } catch (err: any) {
+      toast.error(err.response?.data?.error?.message || 'Failed to delete category');
+    }
+  };
+
   if (loading) {
     return (
       <div className="h-64 flex items-center justify-center">
@@ -146,10 +197,11 @@ export default function SettingsPage() {
   }
 
   const sidebarTabs = [
-    { id: 'general', label: 'General Settings', icon: Sliders },
-    { id: 'environments', label: 'Environments', icon: Server },
-    { id: 'services', label: 'Monitoring Settings', icon: Activity },
-    { id: 'eod', label: 'EOD Parameters', icon: PlayCircle },
+    { id: 'general',      label: 'General Settings',    icon: Sliders      },
+    { id: 'environments', label: 'Environments',        icon: Server       },
+    { id: 'calendar',     label: 'Calendar Settings',   icon: CalendarDays },
+    { id: 'services',     label: 'Monitoring Settings', icon: Activity     },
+    { id: 'eod',          label: 'EOD Parameters',      icon: PlayCircle   },
   ] as const;
 
   return (
@@ -378,6 +430,89 @@ export default function SettingsPage() {
             </div>
           )}
 
+          {/* ─── TAB: CALENDAR ──────────────────────────────────────────────── */}
+          {activeTab === 'calendar' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between border-b border-surface-700/30 pb-2">
+                <div>
+                  <h2 className="text-lg font-semibold text-surface-150">Activity Categories</h2>
+                  <p className="text-xs text-surface-500">Colour-coded categories used to classify calendar events.</p>
+                </div>
+                {isAdmin && (
+                  <button
+                    onClick={() => {
+                      setCategoryForm({ name: '', color: '#97144d', icon: '' });
+                      setShowAddCategory(true);
+                    }}
+                    className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1.5"
+                  >
+                    <Plus size={14} />
+                    Add Category
+                  </button>
+                )}
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-xs uppercase text-surface-500 tracking-wider">
+                      <th className="text-left py-2 px-3 font-medium">Category</th>
+                      <th className="text-left py-2 px-3 font-medium">Color</th>
+                      <th className="text-left py-2 px-3 font-medium">Icon</th>
+                      {isAdmin && <th className="text-right py-2 px-3 font-medium">Actions</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {categories.map(cat => (
+                      <tr key={cat.id} className="border-b border-surface-800/40 hover:bg-surface-800/20 transition-colors">
+                        <td className="py-2.5 px-3 font-medium text-surface-200">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: cat.color }} />
+                            {cat.name}
+                          </div>
+                        </td>
+                        <td className="py-2.5 px-3 text-surface-400 flex items-center gap-2">
+                          <div className="w-3.5 h-3.5 rounded-full border border-surface-700" style={{ backgroundColor: cat.color }} />
+                          <span className="font-mono text-xs">{cat.color}</span>
+                        </td>
+                        <td className="py-2.5 px-3 text-surface-400 font-mono text-xs">{cat.icon || '—'}</td>
+                        {isAdmin && (
+                          <td className="py-2.5 px-3 text-right">
+                            <div className="flex justify-end gap-1.5">
+                              <button
+                                onClick={() => {
+                                  setSelectedCategoryForEdit(cat);
+                                  setCategoryForm({ name: cat.name, color: cat.color, icon: cat.icon || '' });
+                                  setShowEditCategory(true);
+                                }}
+                                className="p-1 rounded hover:bg-surface-800 text-surface-500 hover:text-brand-400 transition-colors"
+                              >
+                                <Edit3 size={14} />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteCategory(cat.id)}
+                                className="p-1 rounded hover:bg-red-500/10 text-surface-600 hover:text-red-400 transition-colors"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </div>
+                          </td>
+                        )}
+                      </tr>
+                    ))}
+                    {categories.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="py-8 text-center text-surface-600 text-sm">
+                          No categories configured yet.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {/* ─── TAB: SERVICES (MONITORING) ─────────────────────────────────── */}
           {activeTab === 'services' && (
             <div className="space-y-6">
@@ -535,6 +670,105 @@ export default function SettingsPage() {
           </div>
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" onClick={() => { setShowEditEnvType(false); setSelectedEnvTypeForEdit(null); }} className="btn-secondary">Cancel</button>
+            <button type="submit" className="btn-primary">Save Changes</button>
+          </div>
+        </form>
+      </Modal>
+
+      {/* ─── MODALS: ACTIVITY CATEGORY CRUD ─────────────────────────────── */}
+      <Modal isOpen={showAddCategory} onClose={() => setShowAddCategory(false)} title="Add Activity Category">
+        <form onSubmit={handleCreateCategory} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-surface-400">Category Name *</label>
+              <input
+                type="text"
+                className="input-field"
+                value={categoryForm.name}
+                onChange={e => setCategoryForm({ ...categoryForm, name: e.target.value })}
+                placeholder="e.g. DR Activity"
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-surface-400">Hex Color *</label>
+              <div className="flex gap-2">
+                <input
+                  type="color"
+                  className="w-10 h-10 border border-surface-700 bg-surface-800 rounded cursor-pointer"
+                  value={categoryForm.color}
+                  onChange={e => setCategoryForm({ ...categoryForm, color: e.target.value })}
+                />
+                <input
+                  type="text"
+                  className="input-field font-mono"
+                  value={categoryForm.color}
+                  onChange={e => setCategoryForm({ ...categoryForm, color: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-surface-400">Icon (Lucide name)</label>
+            <input
+              type="text"
+              className="input-field font-mono"
+              value={categoryForm.icon}
+              onChange={e => setCategoryForm({ ...categoryForm, icon: e.target.value })}
+              placeholder="e.g. ShieldAlert"
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={() => setShowAddCategory(false)} className="btn-secondary">Cancel</button>
+            <button type="submit" className="btn-primary">Add Category</button>
+          </div>
+        </form>
+      </Modal>
+
+      <Modal isOpen={showEditCategory} onClose={() => { setShowEditCategory(false); setSelectedCategoryForEdit(null); }} title="Edit Activity Category">
+        <form onSubmit={handleUpdateCategory} className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-surface-400">Category Name *</label>
+              <input
+                type="text"
+                className="input-field"
+                value={categoryForm.name}
+                onChange={e => setCategoryForm({ ...categoryForm, name: e.target.value })}
+                required
+              />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-sm font-medium text-surface-400">Hex Color *</label>
+              <div className="flex gap-2">
+                <input
+                  type="color"
+                  className="w-10 h-10 border border-surface-700 bg-surface-800 rounded cursor-pointer"
+                  value={categoryForm.color}
+                  onChange={e => setCategoryForm({ ...categoryForm, color: e.target.value })}
+                />
+                <input
+                  type="text"
+                  className="input-field font-mono"
+                  value={categoryForm.color}
+                  onChange={e => setCategoryForm({ ...categoryForm, color: e.target.value })}
+                  required
+                />
+              </div>
+            </div>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-surface-400">Icon (Lucide name)</label>
+            <input
+              type="text"
+              className="input-field font-mono"
+              value={categoryForm.icon}
+              onChange={e => setCategoryForm({ ...categoryForm, icon: e.target.value })}
+            />
+          </div>
+          <div className="flex justify-end gap-3 pt-2">
+            <button type="button" onClick={() => { setShowEditCategory(false); setSelectedCategoryForEdit(null); }} className="btn-secondary">Cancel</button>
             <button type="submit" className="btn-primary">Save Changes</button>
           </div>
         </form>

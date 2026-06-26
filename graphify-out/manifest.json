@@ -1,0 +1,292 @@
+{
+  "D:\\Coding\\finops-portal\\.claude\\settings.json": {
+    "mtime": 1782511029.1979823,
+    "ast_hash": "af5683cedca023035194f9ad92eb0eef",
+    "semantic_hash": "af5683cedca023035194f9ad92eb0eef"
+  },
+  "D:\\Coding\\finops-portal\\.claude\\settings.local.json": {
+    "mtime": 1782510782.8614163,
+    "ast_hash": "d758c57e603f6ecd1682c5d305405b1b",
+    "semantic_hash": "d758c57e603f6ecd1682c5d305405b1b"
+  },
+  "D:\\Coding\\finops-portal\\backend\\package.json": {
+    "mtime": 1782164052.4252148,
+    "ast_hash": "0e6bddad4e0e5119ad880b7cf1dcb966",
+    "semantic_hash": "0e6bddad4e0e5119ad880b7cf1dcb966"
+  },
+  "D:\\Coding\\finops-portal\\backend\\prisma\\seed.ts": {
+    "mtime": 1782511986.600146,
+    "ast_hash": "7e2e6472dbe01002c588c1b1bef5d8e6",
+    "semantic_hash": "7e2e6472dbe01002c588c1b1bef5d8e6"
+  },
+  "D:\\Coding\\finops-portal\\backend\\src\\core\\auth\\authProvider.ts": {
+    "mtime": 1782163262.638786,
+    "ast_hash": "a23c4629a69bdb06b146894d2b478ce8",
+    "semantic_hash": "a23c4629a69bdb06b146894d2b478ce8"
+  },
+  "D:\\Coding\\finops-portal\\backend\\src\\core\\auth\\authRoutes.ts": {
+    "mtime": 1782499297.4885323,
+    "ast_hash": "9ea08651387576c5b35e9c1f0448d250",
+    "semantic_hash": "9ea08651387576c5b35e9c1f0448d250"
+  },
+  "D:\\Coding\\finops-portal\\backend\\src\\core\\auth\\authService.ts": {
+    "mtime": 1782499311.0004065,
+    "ast_hash": "033994cd4a257bc8ecad93cff4e95db1",
+    "semantic_hash": "033994cd4a257bc8ecad93cff4e95db1"
+  },
+  "D:\\Coding\\finops-portal\\backend\\src\\core\\config.ts": {
+    "mtime": 1782163227.6080184,
+    "ast_hash": "dd80020dee242c8deddd407c1cdb7cdc",
+    "semantic_hash": "dd80020dee242c8deddd407c1cdb7cdc"
+  },
+  "D:\\Coding\\finops-portal\\backend\\src\\core\\database\\prisma.ts": {
+    "mtime": 1782163237.6786478,
+    "ast_hash": "8965ecff43ec23ce185b6d5a1c42bd96",
+    "semantic_hash": "8965ecff43ec23ce185b6d5a1c42bd96"
+  },
+  "D:\\Coding\\finops-portal\\backend\\src\\core\\middleware\\authenticate.ts": {
+    "mtime": 1782163293.3208272,
+    "ast_hash": "86b2a43ee4adb09f21fa627b18a0113f",
+    "semantic_hash": "86b2a43ee4adb09f21fa627b18a0113f"
+  },
+  "D:\\Coding\\finops-portal\\backend\\src\\core\\middleware\\authorize.ts": {
+    "mtime": 1782163302.936538,
+    "ast_hash": "f0c9d4106792e6fb462a9909219d3cff",
+    "semantic_hash": "f0c9d4106792e6fb462a9909219d3cff"
+  },
+  "D:\\Coding\\finops-portal\\backend\\src\\core\\middleware\\errorHandler.ts": {
+    "mtime": 1782163248.6555316,
+    "ast_hash": "70945388136caa2918ec4c1ff8fe53e7",
+    "semantic_hash": "70945388136caa2918ec4c1ff8fe53e7"
+  },
+  "D:\\Coding\\finops-portal\\backend\\src\\plugins\\environments\\index.ts": {
+    "mtime": 1782163401.7955756,
+    "ast_hash": "49c69b7a5f3a206108b07e2b30b84d90",
+    "semantic_hash": "49c69b7a5f3a206108b07e2b30b84d90"
+  },
+  "D:\\Coding\\finops-portal\\backend\\src\\plugins\\environments\\routes.ts": {
+    "mtime": 1782506937.5250854,
+    "ast_hash": "613d110ee424cea633ec3503aa45c306",
+    "semantic_hash": "613d110ee424cea633ec3503aa45c306"
+  },
+  "D:\\Coding\\finops-portal\\backend\\src\\plugins\\environments\\service.ts": {
+    "mtime": 1782506930.754966,
+    "ast_hash": "8e4c6e92c08397edfe3ae3e75cbe1406",
+    "semantic_hash": "8e4c6e92c08397edfe3ae3e75cbe1406"
+  },
+  "D:\\Coding\\finops-portal\\backend\\src\\server.ts": {
+    "mtime": 1782512055.8321764,
+    "ast_hash": "73cb545aff360f5f178f2aac84f833e5",
+    "semantic_hash": "73cb545aff360f5f178f2aac84f833e5"
+  },
+  "D:\\Coding\\finops-portal\\backend\\tsconfig.json": {
+    "mtime": 1782499502.641679,
+    "ast_hash": "6a39ba602698cf8156991de3ef62ff68",
+    "semantic_hash": "6a39ba602698cf8156991de3ef62ff68"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\eslint.config.js": {
+    "mtime": 1780833586.5796907,
+    "ast_hash": "0355276bc79439afe3c53e3a2470ca1e",
+    "semantic_hash": "0355276bc79439afe3c53e3a2470ca1e"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\package.json": {
+    "mtime": 1782163536.2252634,
+    "ast_hash": "d43d323fd5236bd5e5f0c6bf35c15bec",
+    "semantic_hash": "d43d323fd5236bd5e5f0c6bf35c15bec"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\postcss.config.js": {
+    "mtime": 1782163538.4718306,
+    "ast_hash": "ef3ba2a81ba19f8ea5ddf625521e96f0",
+    "semantic_hash": "ef3ba2a81ba19f8ea5ddf625521e96f0"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\src\\App.tsx": {
+    "mtime": 1782512243.7028348,
+    "ast_hash": "8d1ee8c52bf75ca6363e19acd4d7046e",
+    "semantic_hash": "8d1ee8c52bf75ca6363e19acd4d7046e"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\src\\components\\common\\Modal.tsx": {
+    "mtime": 1782503053.7035434,
+    "ast_hash": "66a686f1fd2098c23ea503b18b714562",
+    "semantic_hash": "66a686f1fd2098c23ea503b18b714562"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\src\\components\\common\\Navbar.tsx": {
+    "mtime": 1782500075.8019357,
+    "ast_hash": "d5b6bbe0e5b36e1b4fb1528cc13ea430",
+    "semantic_hash": "d5b6bbe0e5b36e1b4fb1528cc13ea430"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\src\\components\\common\\Sidebar.tsx": {
+    "mtime": 1782512233.2239704,
+    "ast_hash": "46e093c0d4b17b67c74a05369bf04854",
+    "semantic_hash": "46e093c0d4b17b67c74a05369bf04854"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\src\\contexts\\AuthContext.tsx": {
+    "mtime": 1782163664.6401095,
+    "ast_hash": "f7a89129c5985211b5ca45c261d2db5a",
+    "semantic_hash": "f7a89129c5985211b5ca45c261d2db5a"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\src\\contexts\\SidebarContext.tsx": {
+    "mtime": 1782508440.6221359,
+    "ast_hash": "6bc51b55c9053a1e23978ac19e8c57cb",
+    "semantic_hash": "6bc51b55c9053a1e23978ac19e8c57cb"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\src\\contexts\\ThemeContext.tsx": {
+    "mtime": 1782500046.0276444,
+    "ast_hash": "9bd7d9f99aa86e9265f4a339fd5c11e4",
+    "semantic_hash": "9bd7d9f99aa86e9265f4a339fd5c11e4"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\src\\contexts\\useSidebar.ts": {
+    "mtime": 1782508425.261241,
+    "ast_hash": "18e1f3cd748606ccd359fd831f450c73",
+    "semantic_hash": "18e1f3cd748606ccd359fd831f450c73"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\src\\layouts\\MainLayout.tsx": {
+    "mtime": 1782508469.311977,
+    "ast_hash": "9f8e9e0cb2e631e95dc2ec24805217d1",
+    "semantic_hash": "9f8e9e0cb2e631e95dc2ec24805217d1"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\src\\main.tsx": {
+    "mtime": 1782163913.6077683,
+    "ast_hash": "a3150907ddf2842367caa98e12a33298",
+    "semantic_hash": "a3150907ddf2842367caa98e12a33298"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\src\\pages\\DashboardPage.tsx": {
+    "mtime": 1782163887.225879,
+    "ast_hash": "04101dd49943c189c1dfbd10c6049f5c",
+    "semantic_hash": "04101dd49943c189c1dfbd10c6049f5c"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\src\\pages\\EnvironmentsPage.tsx": {
+    "mtime": 1782508528.301435,
+    "ast_hash": "0234646b1d669846a9412c6bd4631560",
+    "semantic_hash": "0234646b1d669846a9412c6bd4631560"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\src\\pages\\LoginPage.tsx": {
+    "mtime": 1782163767.8247259,
+    "ast_hash": "82eea6b5309d15efbe9f16f19384d77d",
+    "semantic_hash": "82eea6b5309d15efbe9f16f19384d77d"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\src\\pages\\SettingsPage.tsx": {
+    "mtime": 1782504310.4192631,
+    "ast_hash": "24bfeab533110d19cd5c387285f4fee2",
+    "semantic_hash": "24bfeab533110d19cd5c387285f4fee2"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\src\\services\\api.ts": {
+    "mtime": 1782163622.078142,
+    "ast_hash": "57e28dd1a86eddec1f51109cccfa1b42",
+    "semantic_hash": "57e28dd1a86eddec1f51109cccfa1b42"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\src\\services\\envService.ts": {
+    "mtime": 1782506959.5532632,
+    "ast_hash": "c13654afeebc72975e6a318e0d0a1e85",
+    "semantic_hash": "c13654afeebc72975e6a318e0d0a1e85"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\src\\types\\auth.ts": {
+    "mtime": 1782163590.5526004,
+    "ast_hash": "186067a322f8ee164cecb1f2a6ed7118",
+    "semantic_hash": "186067a322f8ee164cecb1f2a6ed7118"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\src\\types\\environment.ts": {
+    "mtime": 1782506947.79934,
+    "ast_hash": "0acc0130c6c7987a5727fcca7b7863b7",
+    "semantic_hash": "0acc0130c6c7987a5727fcca7b7863b7"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\tailwind.config.js": {
+    "mtime": 1782500201.3536026,
+    "ast_hash": "c8d5d948ad47de03c576db38707f3d5c",
+    "semantic_hash": "c8d5d948ad47de03c576db38707f3d5c"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\tsconfig.app.json": {
+    "mtime": 1780833586.6514764,
+    "ast_hash": "136630b5accce1ca50663df229534a26",
+    "semantic_hash": "136630b5accce1ca50663df229534a26"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\tsconfig.json": {
+    "mtime": 1780833586.6587589,
+    "ast_hash": "a3d39fa780ebff65444de257f291ce6c",
+    "semantic_hash": "a3d39fa780ebff65444de257f291ce6c"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\tsconfig.node.json": {
+    "mtime": 1780833586.6697137,
+    "ast_hash": "70bdd0a673bcfc0e828080b306e7c680",
+    "semantic_hash": "70bdd0a673bcfc0e828080b306e7c680"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\vite.config.ts": {
+    "mtime": 1780833586.9534678,
+    "ast_hash": "88439104b3c207f17d33ef3160e3b080",
+    "semantic_hash": "88439104b3c207f17d33ef3160e3b080"
+  },
+  "D:\\Coding\\finops-portal\\start_all.sh": {
+    "mtime": 1782415542.812019,
+    "ast_hash": "b156f77685cbf9e540e7a3d72afdce0d",
+    "semantic_hash": "b156f77685cbf9e540e7a3d72afdce0d"
+  },
+  "D:\\Coding\\finops-portal\\.agents\\AGENTS.md": {
+    "mtime": 1782508320.250144,
+    "ast_hash": "6fe73b375f97ce0d6bb2d34855d6f6dd",
+    "semantic_hash": "6fe73b375f97ce0d6bb2d34855d6f6dd"
+  },
+  "D:\\Coding\\finops-portal\\.claude\\skills\\project-skill.md": {
+    "mtime": 1782508320.250144,
+    "ast_hash": "6fe73b375f97ce0d6bb2d34855d6f6dd",
+    "semantic_hash": "6fe73b375f97ce0d6bb2d34855d6f6dd"
+  },
+  "D:\\Coding\\finops-portal\\CLAUDE.md": {
+    "mtime": 1782511029.1969802,
+    "ast_hash": "8a6643a420fdad6bfb583523bc6cef16",
+    "semantic_hash": "8a6643a420fdad6bfb583523bc6cef16"
+  },
+  "D:\\Coding\\finops-portal\\README.md": {
+    "mtime": 1782500138.1889913,
+    "ast_hash": "ec32d91fad5fd3c4b7bb62977f03aed0",
+    "semantic_hash": "ec32d91fad5fd3c4b7bb62977f03aed0"
+  },
+  "D:\\Coding\\finops-portal\\artifacts\\implementation_plan.md": {
+    "mtime": 1782509737.3143525,
+    "ast_hash": "8210c328d97d3e248674a08db2991ef8",
+    "semantic_hash": "8210c328d97d3e248674a08db2991ef8"
+  },
+  "D:\\Coding\\finops-portal\\db\\docker-compose.yml": {
+    "mtime": 1782415667.837026,
+    "ast_hash": "12641495a83c062bac743db36f11caaa",
+    "semantic_hash": "12641495a83c062bac743db36f11caaa"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\README.md": {
+    "mtime": 1780833586.6938255,
+    "ast_hash": "f6e3faf55d738cf2affe1b44195f27cf",
+    "semantic_hash": "f6e3faf55d738cf2affe1b44195f27cf"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\index.html": {
+    "mtime": 1782163934.9858868,
+    "ast_hash": "9d42f64ff8d4c4f01f4f0e8632773bb8",
+    "semantic_hash": "9d42f64ff8d4c4f01f4f0e8632773bb8"
+  },
+  "D:\\Coding\\finops-portal\\requirement.txt": {
+    "mtime": 1782161475.0266857,
+    "ast_hash": "c50702c00b8bdffd75f63534725acba9",
+    "semantic_hash": "c50702c00b8bdffd75f63534725acba9"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\public\\favicon.svg": {
+    "mtime": 1780833586.7837865,
+    "ast_hash": "7e840862161341271697daa99a40d76b",
+    "semantic_hash": "7e840862161341271697daa99a40d76b"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\public\\icons.svg": {
+    "mtime": 1780833586.8237426,
+    "ast_hash": "3b4fcfcf393eca4d264dca4a4663bc37",
+    "semantic_hash": "3b4fcfcf393eca4d264dca4a4663bc37"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\src\\assets\\hero.png": {
+    "mtime": 1780833586.7298543,
+    "ast_hash": "aead493361b27e7510691c5d7072dfc1",
+    "semantic_hash": "aead493361b27e7510691c5d7072dfc1"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\src\\assets\\react.svg": {
+    "mtime": 1780833586.8621194,
+    "ast_hash": "f0402b67b6ce880f65666bb49e841696",
+    "semantic_hash": "f0402b67b6ce880f65666bb49e841696"
+  },
+  "D:\\Coding\\finops-portal\\frontend\\src\\assets\\vite.svg": {
+    "mtime": 1780833586.9025428,
+    "ast_hash": "9960a24288958394ac50e57ff638b036",
+    "semantic_hash": "9960a24288958394ac50e57ff638b036"
+  }
+}

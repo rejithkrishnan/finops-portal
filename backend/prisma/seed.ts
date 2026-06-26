@@ -268,6 +268,95 @@ async function main() {
   }
 
   console.log('✓ Database instances created');
+
+  // ─── Create Activity Categories ─────────────────────────────────
+  const categories = [
+    { name: 'DR Activity',  color: '#97144d', icon: 'ShieldAlert'   },
+    { name: 'Month End',    color: '#d97706', icon: 'CalendarClock'  },
+    { name: 'Quarter End',  color: '#2563eb', icon: 'CalendarRange'  },
+    { name: 'Deployment',   color: '#059669', icon: 'Rocket'         },
+    { name: 'Maintenance',  color: '#7c3aed', icon: 'Wrench'         },
+    { name: 'Other',        color: '#6b7280', icon: 'CalendarDays'   },
+  ];
+
+  const createdCats: Record<string, number> = {};
+  for (const cat of categories) {
+    const c = await prisma.activityCategory.upsert({
+      where: { name: cat.name },
+      update: { color: cat.color, icon: cat.icon },
+      create: cat,
+    });
+    createdCats[c.name] = c.id;
+    console.log(`✓ Activity Category: ${c.name}`);
+  }
+
+  // ─── Create Sample Activities (June / July 2026) ─────────────────
+  const drActivity = await prisma.activity.findFirst({
+    where: { title: 'Quarterly DR Drill — All Environments' },
+  });
+  if (!drActivity) {
+    await prisma.activity.create({
+      data: {
+        title: 'Quarterly DR Drill — All Environments',
+        description: 'Full ecosystem DR switchover and recovery validation.',
+        categoryId: createdCats['DR Activity'],
+        startDate: new Date(2026, 5, 25),
+        endDate: new Date(2026, 5, 27),
+        allDay: true,
+        isEcosystem: true,
+        createdById: admin.id,
+      },
+    });
+    console.log('✓ Sample Activity: Quarterly DR Drill');
+  }
+
+  const monthEnd = await prisma.activity.findFirst({
+    where: { title: 'Month End Reconciliation — PROD' },
+  });
+  if (!monthEnd) {
+    const ae = await prisma.activity.create({
+      data: {
+        title: 'Month End Reconciliation — PROD',
+        description: 'EOD batch reconciliation and close activities for June 2026.',
+        categoryId: createdCats['Month End'],
+        startDate: new Date(2026, 5, 29),
+        endDate: new Date(2026, 5, 30),
+        allDay: true,
+        isEcosystem: false,
+        createdById: admin.id,
+      },
+    });
+    await prisma.activityEnvironment.createMany({
+      data: [
+        { activityId: ae.id, environmentId: prodDC.id },
+        { activityId: ae.id, environmentId: prodDR.id },
+      ],
+    });
+    console.log('✓ Sample Activity: Month End Reconciliation');
+  }
+
+  const uatDeploy = await prisma.activity.findFirst({
+    where: { title: 'UAT Deployment — API Gateway v2.1' },
+  });
+  if (!uatDeploy) {
+    const ae = await prisma.activity.create({
+      data: {
+        title: 'UAT Deployment — API Gateway v2.1',
+        description: 'Deployment of API Gateway version 2.1 to UAT environment.',
+        categoryId: createdCats['Deployment'],
+        startDate: new Date(2026, 6, 1),
+        endDate: new Date(2026, 6, 2),
+        allDay: true,
+        isEcosystem: false,
+        createdById: admin.id,
+      },
+    });
+    await prisma.activityEnvironment.create({
+      data: { activityId: ae.id, environmentId: uat.id },
+    });
+    console.log('✓ Sample Activity: UAT Deployment');
+  }
+
   console.log('\n✅ Seed complete!\n');
 }
 
