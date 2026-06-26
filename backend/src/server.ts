@@ -3,7 +3,7 @@ import cors from 'cors';
 import { config } from './core/config';
 import { errorHandler, notFoundHandler } from './core/middleware/errorHandler';
 import authRoutes from './core/auth/authRoutes';
-import { registerPlugins } from './plugin-registry';
+import environmentsRoutes from './plugins/environments/routes';
 
 const app = express();
 
@@ -20,9 +20,10 @@ app.get('/api/health', (_req, res) => {
 // ─── Auth Routes ──────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 
-// ─── Plugin Registration ─────────────────────────────────────────
+// ─── API Routes ───────────────────────────────────────────────────
+app.use('/api', environmentsRoutes);
+
 async function bootstrap() {
-  await registerPlugins(app);
 
   // ─── Error Handlers (must be after routes) ──────────────────────
   app.use(notFoundHandler);

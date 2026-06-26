@@ -133,7 +133,7 @@ router.post('/users', authenticate, authorize('ADMIN'), async (req: Request, res
 // PUT /api/auth/users/:id
 router.put('/users/:id', authenticate, authorize('ADMIN'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id as string, 10);
     const data = updateUserSchema.parse(req.body);
     const user = await authProvider.updateUser!(id, data);
     res.json({ success: true, data: user });

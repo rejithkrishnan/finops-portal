@@ -129,7 +129,7 @@ export function generateAccessToken(user: AuthUser): string {
   return jwt.sign(
     { id: user.id, username: user.username, role: user.role },
     config.jwt.secret,
-    { expiresIn: config.jwt.expiresIn }
+    { expiresIn: config.jwt.expiresIn as any }
   );
 }
 
@@ -137,7 +137,7 @@ export function generateRefreshToken(user: AuthUser): string {
   return jwt.sign(
     { id: user.id },
     config.jwt.refreshSecret,
-    { expiresIn: config.jwt.refreshExpiresIn }
+    { expiresIn: config.jwt.refreshExpiresIn as any }
   );
 }
 

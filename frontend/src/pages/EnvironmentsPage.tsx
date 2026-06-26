@@ -1,19 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  AppWindow, Server, Database, Globe, Search, Plus, ChevronDown, ChevronRight,
-  Trash2, Monitor, HardDrive,
+  AppWindow, Server as ServerIcon, Database, Globe, Search, Plus, ChevronDown, ChevronRight,
+  ChevronUp, Trash2, Monitor, HardDrive, Edit3,
 } from 'lucide-react';
 import {
   PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip,
 } from 'recharts';
 import toast from 'react-hot-toast';
 import * as envService from '../services/envService';
+import type { EnvType } from '../services/envService';
 import type {
-  Application, DashboardData, Environment, ServerRole,
+  Application, DashboardData, Environment, ServerRole, Server, DatabaseInstance,
 } from '../types/environment';
 import Modal from '../components/common/Modal';
 import { useAuth } from '../contexts/AuthContext';
+import { useTheme } from '../contexts/ThemeContext';
 
 // ─── Animated Counter ─────────────────────────────────────────────
 function AnimatedCounter({ value, duration = 800 }: { value: number; duration?: number }) {
@@ -39,7 +41,7 @@ function AnimatedCounter({ value, duration = 800 }: { value: number; duration?: 
 function SummaryCard({
   icon: Icon, label, value, color, delay,
 }: {
-  icon: any; label: string; value: number; color: string; delay: number;
+  icon: React.ElementType; label: string; value: number; color: string; delay: number;
 }) {
   return (
     <motion.div
@@ -82,34 +84,82 @@ function RoleBadge({ name, color }: { name: string; color: string }) {
 
 // ─── Environment Detail Card ──────────────────────────────────────
 function EnvironmentCard({
-  env, roles, onRefresh, isAdmin,
+  env, roles, onRefresh, isAdmin, onEditEnv, onCollapse, searchQuery,
 }: {
-  env: Environment; roles: ServerRole[]; onRefresh: () => void; isAdmin: boolean;
+  env: Environment;
+  roles: ServerRole[];
+  onRefresh: () => void;
+  isAdmin: boolean;
+  onEditEnv: (env: Environment) => void;
+  onCollapse: (envId: number) => void;
+  searchQuery: string;
 }) {
-  const [activeTab, setActiveTab] = useState<'servers' | 'databases'>('servers');
-  const [searchQuery, setSearchQuery] = useState('');
   const [showAddServer, setShowAddServer] = useState(false);
   const [showAddDb, setShowAddDb] = useState(false);
 
-  const filteredServers = env.servers?.filter((s) =>
-    s.hostname.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.ipAddress.includes(searchQuery) ||
-    s.role.name.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
+  const [showEditServer, setShowEditServer] = useState(false);
+  const [selectedServerForEdit, setSelectedServerForEdit] = useState<Server | null>(null);
+  const [showEditDb, setShowEditDb] = useState(false);
+  const [selectedDbForEdit, setSelectedDbForEdit] = useState<DatabaseInstance | null>(null);
 
-  const filteredDbs = env.databases?.filter((d) =>
-    d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    d.host.includes(searchQuery)
-  ) || [];
+  const filteredServers = env.servers?.filter((s) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return s.hostname.toLowerCase().includes(q) ||
+           s.ipAddress.includes(q) ||
+           s.role.name.toLowerCase().includes(q) ||
+           (s.os && s.os.toLowerCase().includes(q)) ||
+           (s.segment && s.segment.toLowerCase().includes(q));
+  }) || [];
 
-  const handleAddServer = async (data: any) => {
+  const filteredDbs = env.databases?.filter((d) => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return d.name.toLowerCase().includes(q) ||
+           d.host.includes(q) ||
+           d.dbType.toLowerCase().includes(q) ||
+           (d.schemaName && d.schemaName.toLowerCase().includes(q));
+  }) || [];
+
+  const handleAddServer = async (data: {
+    hostname: string;
+    ipAddress: string;
+    roleId: number;
+    os?: string;
+    cores?: number;
+    memory?: string;
+    segment?: string;
+  }) => {
     try {
       await envService.createServer(env.id, data);
       toast.success('Server added');
       setShowAddServer(false);
       onRefresh();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error?.message || 'Failed to add server');
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: { message?: string } } } };
+      toast.error(error.response?.data?.error?.message || 'Failed to add server');
+    }
+  };
+
+  const handleEditServer = async (data: Partial<{
+    hostname: string;
+    ipAddress: string;
+    roleId: number;
+    os?: string;
+    cores?: number;
+    memory?: string;
+    segment?: string;
+  }>) => {
+    if (!selectedServerForEdit) return;
+    try {
+      await envService.updateServer(selectedServerForEdit.id, data);
+      toast.success('Server updated');
+      setShowEditServer(false);
+      setSelectedServerForEdit(null);
+      onRefresh();
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: { message?: string } } } };
+      toast.error(error.response?.data?.error?.message || 'Failed to update server');
     }
   };
 
@@ -124,14 +174,45 @@ function EnvironmentCard({
     }
   };
 
-  const handleAddDb = async (data: any) => {
+  const handleAddDb = async (data: {
+    name: string;
+    host: string;
+    port: string;
+    dbType: string;
+    version?: string;
+    schemaName?: string;
+    connectionString?: string;
+  }) => {
     try {
       await envService.createDatabase(env.id, { ...data, port: parseInt(data.port) });
       toast.success('Database added');
       setShowAddDb(false);
       onRefresh();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error?.message || 'Failed to add database');
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: { message?: string } } } };
+      toast.error(error.response?.data?.error?.message || 'Failed to add database');
+    }
+  };
+
+  const handleEditDb = async (data: Partial<{
+    name: string;
+    host: string;
+    port: string;
+    dbType: string;
+    version?: string;
+    schemaName?: string;
+    connectionString?: string;
+  }>) => {
+    if (!selectedDbForEdit) return;
+    try {
+      await envService.updateDatabase(selectedDbForEdit.id, { ...data, port: parseInt(data.port) });
+      toast.success('Database updated');
+      setShowEditDb(false);
+      setSelectedDbForEdit(null);
+      onRefresh();
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: { message?: string } } } };
+      toast.error(error.response?.data?.error?.message || 'Failed to update database');
     }
   };
 
@@ -162,197 +243,204 @@ function EnvironmentCard({
             <p className="text-sm text-surface-500">{env.description}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-xs">
-          <span className="px-2 py-0.5 rounded bg-surface-700/50 text-surface-400">{env.envType}</span>
-          <span className="px-2 py-0.5 rounded bg-surface-700/50 text-surface-400">{env.siteType}</span>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="px-5 pt-3 flex items-center gap-1 border-b border-surface-700/30">
-        <button
-          onClick={() => setActiveTab('servers')}
-          className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-t-lg transition-colors relative ${
-            activeTab === 'servers'
-              ? 'text-brand-400'
-              : 'text-surface-500 hover:text-surface-300'
-          }`}
-        >
-          <Monitor size={15} />
-          Servers
-          <span className={`px-1.5 py-0.5 rounded text-xs ${
-            activeTab === 'servers' ? 'bg-brand-500/20 text-brand-400' : 'bg-surface-700 text-surface-500'
-          }`}>
-            {env.servers?.length || 0}
-          </span>
-          {activeTab === 'servers' && (
-            <motion.div layoutId={`tab-${env.id}`} className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-400 rounded-t-full" />
-          )}
-        </button>
-        <button
-          onClick={() => setActiveTab('databases')}
-          className={`flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-t-lg transition-colors relative ${
-            activeTab === 'databases'
-              ? 'text-brand-400'
-              : 'text-surface-500 hover:text-surface-300'
-          }`}
-        >
-          <HardDrive size={15} />
-          Databases
-          <span className={`px-1.5 py-0.5 rounded text-xs ${
-            activeTab === 'databases' ? 'bg-brand-500/20 text-brand-400' : 'bg-surface-700 text-surface-500'
-          }`}>
-            {env.databases?.length || 0}
-          </span>
-          {activeTab === 'databases' && (
-            <motion.div layoutId={`tab-${env.id}`} className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-400 rounded-t-full" />
-          )}
-        </button>
-
-        <div className="ml-auto flex items-center gap-2 pb-1">
-          <div className="relative">
-            <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-surface-500" />
-            <input
-              type="text"
-              placeholder="Search..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="input-field text-xs py-1.5 pl-8 pr-3 w-48"
-            />
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 text-xs">
+            <span className="px-2 py-0.5 rounded bg-surface-700/50 text-surface-400">{env.envType}</span>
           </div>
           {isAdmin && (
             <button
-              onClick={() => activeTab === 'servers' ? setShowAddServer(true) : setShowAddDb(true)}
-              className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1"
+              onClick={() => onEditEnv(env)}
+              className="p-1.5 rounded hover:bg-surface-800 text-surface-400 hover:text-surface-200 transition-colors"
+              title="Edit Environment"
             >
-              <Plus size={14} />
-              Add
+              <Edit3 size={15} />
             </button>
           )}
+          <button
+            onClick={() => onCollapse(env.id)}
+            className="p-1.5 rounded hover:bg-surface-800 text-surface-400 hover:text-surface-200 transition-colors"
+            title="Collapse"
+          >
+            <ChevronUp size={15} />
+          </button>
         </div>
       </div>
 
-      {/* Content */}
-      <div className="overflow-x-auto">
-        <AnimatePresence mode="wait">
-          {activeTab === 'servers' ? (
-            <motion.table
-              key="servers"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="w-full text-sm"
-            >
+      {/* Content: Unified Servers & Databases View */}
+      <div className="p-5 space-y-6">
+        
+        {/* ─── SERVERS SECTION ─── */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between border-b border-surface-700/20 pb-2">
+            <div className="flex items-center gap-2">
+              <Monitor size={16} className="text-brand-400" />
+              <h4 className="font-semibold text-sm text-surface-200">Servers</h4>
+              <span className="px-2 py-0.5 rounded-full text-xs bg-surface-800 text-surface-400 font-medium">
+                {env.servers?.length || 0}
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {isAdmin && (
+                <button
+                  onClick={() => setShowAddServer(true)}
+                  className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1"
+                >
+                  <Plus size={13} />
+                  Add Server
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs uppercase text-surface-500 tracking-wider">
-                  <th className="text-left px-5 py-3 font-medium">Hostname</th>
-                  <th className="text-left px-5 py-3 font-medium">IP</th>
-                  <th className="text-left px-5 py-3 font-medium">Role</th>
-                  <th className="text-left px-5 py-3 font-medium">OS</th>
-                  <th className="text-left px-5 py-3 font-medium">Cores</th>
-                  <th className="text-left px-5 py-3 font-medium">Memory</th>
-                  <th className="text-left px-5 py-3 font-medium">Segment</th>
-                  {isAdmin && <th className="text-right px-5 py-3 font-medium">Actions</th>}
+                  <th className="text-left px-4 py-2.5 font-medium">Hostname</th>
+                  <th className="text-left px-4 py-2.5 font-medium">IP</th>
+                  <th className="text-left px-4 py-2.5 font-medium">Role</th>
+                  <th className="text-left px-4 py-2.5 font-medium">OS</th>
+                  <th className="text-left px-4 py-2.5 font-medium">Cores</th>
+                  <th className="text-left px-4 py-2.5 font-medium">Memory</th>
+                  <th className="text-left px-4 py-2.5 font-medium">Segment</th>
+                  {isAdmin && <th className="text-right px-4 py-2.5 font-medium">Actions</th>}
                 </tr>
               </thead>
               <tbody>
-                {filteredServers.map((server, i) => (
-                  <motion.tr
-                    key={server.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.03 }}
-                    className="table-row"
-                  >
-                    <td className="px-5 py-3 font-medium text-surface-200">{server.hostname}</td>
-                    <td className="px-5 py-3 text-surface-400 font-mono text-xs">{server.ipAddress}</td>
-                    <td className="px-5 py-3">
+                {filteredServers.map((server) => (
+                  <tr key={server.id} className="table-row">
+                    <td className="px-4 py-2 font-medium text-surface-200">{server.hostname}</td>
+                    <td className="px-4 py-2 text-surface-400 font-mono text-xs">{server.ipAddress}</td>
+                    <td className="px-4 py-2">
                       <RoleBadge name={server.role.name} color={server.role.color} />
                     </td>
-                    <td className="px-5 py-3 text-surface-400">{server.os || '—'}</td>
-                    <td className="px-5 py-3 text-surface-400">{server.cores || '—'}</td>
-                    <td className="px-5 py-3 text-surface-400">{server.memory || '—'}</td>
-                    <td className="px-5 py-3 text-surface-400">{server.segment || '—'}</td>
+                    <td className="px-4 py-2 text-surface-400">{server.os || '—'}</td>
+                    <td className="px-4 py-2 text-surface-400">{server.cores || '—'}</td>
+                    <td className="px-4 py-2 text-surface-400">{server.memory || '—'}</td>
+                    <td className="px-4 py-2 text-surface-400">{server.segment || '—'}</td>
                     {isAdmin && (
-                      <td className="px-5 py-3 text-right">
-                        <button
-                          onClick={() => handleDeleteServer(server.id)}
-                          className="p-1 rounded hover:bg-red-500/10 text-surface-600 hover:text-red-400 transition-colors"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                      <td className="px-4 py-2 text-right">
+                        <div className="flex justify-end gap-1">
+                          <button
+                            onClick={() => {
+                              setSelectedServerForEdit(server);
+                              setShowEditServer(true);
+                            }}
+                            className="p-1 rounded hover:bg-surface-800 text-surface-400 hover:text-brand-400 transition-colors"
+                            title="Edit Server"
+                          >
+                            <Edit3 size={13} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteServer(server.id)}
+                            className="p-1 rounded hover:bg-red-500/10 text-surface-600 hover:text-red-400 transition-colors"
+                            title="Delete Server"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
                       </td>
                     )}
-                  </motion.tr>
+                  </tr>
                 ))}
                 {filteredServers.length === 0 && (
                   <tr>
-                    <td colSpan={8} className="px-5 py-8 text-center text-surface-600">
+                    <td colSpan={8} className="px-4 py-6 text-center text-surface-600">
                       {searchQuery ? 'No servers match your search' : 'No servers configured'}
                     </td>
                   </tr>
                 )}
               </tbody>
-            </motion.table>
-          ) : (
-            <motion.table
-              key="databases"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="w-full text-sm"
-            >
+            </table>
+          </div>
+        </div>
+
+        {/* ─── DATABASES SECTION ─── */}
+        <div className="space-y-3 pt-4 border-t border-surface-800/40">
+          <div className="flex items-center justify-between border-b border-surface-700/20 pb-2">
+            <div className="flex items-center gap-2">
+              <HardDrive size={16} className="text-brand-400" />
+              <h4 className="font-semibold text-sm text-surface-200">Databases</h4>
+              <span className="px-2 py-0.5 rounded-full text-xs bg-surface-800 text-surface-400 font-medium">
+                {env.databases?.length || 0}
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {isAdmin && (
+                <button
+                  onClick={() => setShowAddDb(true)}
+                  className="btn-primary text-xs py-1.5 px-3 flex items-center gap-1"
+                >
+                  <Plus size={13} />
+                  Add Database
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
               <thead>
                 <tr className="text-xs uppercase text-surface-500 tracking-wider">
-                  <th className="text-left px-5 py-3 font-medium">Name</th>
-                  <th className="text-left px-5 py-3 font-medium">Host</th>
-                  <th className="text-left px-5 py-3 font-medium">Port</th>
-                  <th className="text-left px-5 py-3 font-medium">Type</th>
-                  <th className="text-left px-5 py-3 font-medium">Version</th>
-                  <th className="text-left px-5 py-3 font-medium">Schema</th>
-                  {isAdmin && <th className="text-right px-5 py-3 font-medium">Actions</th>}
+                  <th className="text-left px-4 py-2.5 font-medium">Name</th>
+                  <th className="text-left px-4 py-2.5 font-medium">Host</th>
+                  <th className="text-left px-4 py-2.5 font-medium">Port</th>
+                  <th className="text-left px-4 py-2.5 font-medium">Type</th>
+                  <th className="text-left px-4 py-2.5 font-medium">Version</th>
+                  <th className="text-left px-4 py-2.5 font-medium">Schema</th>
+                  {isAdmin && <th className="text-right px-4 py-2.5 font-medium">Actions</th>}
                 </tr>
               </thead>
               <tbody>
-                {filteredDbs.map((db, i) => (
-                  <motion.tr
-                    key={db.id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.03 }}
-                    className="table-row"
-                  >
-                    <td className="px-5 py-3 font-medium text-surface-200">{db.name}</td>
-                    <td className="px-5 py-3 text-surface-400 font-mono text-xs">{db.host}</td>
-                    <td className="px-5 py-3 text-surface-400">{db.port}</td>
-                    <td className="px-5 py-3">
+                {filteredDbs.map((db) => (
+                  <tr key={db.id} className="table-row">
+                    <td className="px-4 py-2 font-medium text-surface-200">{db.name}</td>
+                    <td className="px-4 py-2 text-surface-400 font-mono text-xs">{db.host}</td>
+                    <td className="px-4 py-2 text-surface-400">{db.port}</td>
+                    <td className="px-4 py-2">
                       <RoleBadge name={db.dbType} color="#f43f5e" />
                     </td>
-                    <td className="px-5 py-3 text-surface-400">{db.version || '—'}</td>
-                    <td className="px-5 py-3 text-surface-400">{db.schemaName || '—'}</td>
+                    <td className="px-4 py-2 text-surface-400">{db.version || '—'}</td>
+                    <td className="px-4 py-2 text-surface-400">{db.schemaName || '—'}</td>
                     {isAdmin && (
-                      <td className="px-5 py-3 text-right">
-                        <button
-                          onClick={() => handleDeleteDb(db.id)}
-                          className="p-1 rounded hover:bg-red-500/10 text-surface-600 hover:text-red-400 transition-colors"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                      <td className="px-4 py-2 text-right">
+                        <div className="flex justify-end gap-1">
+                          <button
+                            onClick={() => {
+                              setSelectedDbForEdit(db);
+                              setShowEditDb(true);
+                            }}
+                            className="p-1 rounded hover:bg-surface-800 text-surface-400 hover:text-brand-400 transition-colors"
+                            title="Edit Database"
+                          >
+                            <Edit3 size={13} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteDb(db.id)}
+                            className="p-1 rounded hover:bg-red-500/10 text-surface-600 hover:text-red-400 transition-colors"
+                            title="Delete Database"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
                       </td>
                     )}
-                  </motion.tr>
+                  </tr>
                 ))}
                 {filteredDbs.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="px-5 py-8 text-center text-surface-600">
+                    <td colSpan={7} className="px-4 py-6 text-center text-surface-600">
                       {searchQuery ? 'No databases match your search' : 'No databases configured'}
                     </td>
                   </tr>
                 )}
               </tbody>
-            </motion.table>
-          )}
-        </AnimatePresence>
+            </table>
+          </div>
+        </div>
+
       </div>
 
       {/* Add Server Modal */}
@@ -360,17 +448,53 @@ function EnvironmentCard({
         <ServerForm roles={roles} onSubmit={handleAddServer} onCancel={() => setShowAddServer(false)} />
       </Modal>
 
+      {/* Edit Server Modal */}
+      <Modal isOpen={showEditServer} onClose={() => { setShowEditServer(false); setSelectedServerForEdit(null); }} title="Edit Server">
+        <ServerForm roles={roles} onSubmit={handleEditServer} onCancel={() => { setShowEditServer(false); setSelectedServerForEdit(null); }} initialData={selectedServerForEdit} />
+      </Modal>
+
       {/* Add Database Modal */}
       <Modal isOpen={showAddDb} onClose={() => setShowAddDb(false)} title="Add Database">
         <DatabaseForm onSubmit={handleAddDb} onCancel={() => setShowAddDb(false)} />
+      </Modal>
+
+      {/* Edit Database Modal */}
+      <Modal isOpen={showEditDb} onClose={() => { setShowEditDb(false); setSelectedDbForEdit(null); }} title="Edit Database">
+        <DatabaseForm onSubmit={handleEditDb} onCancel={() => { setShowEditDb(false); setSelectedDbForEdit(null); }} initialData={selectedDbForEdit} />
       </Modal>
     </motion.div>
   );
 }
 
 // ─── Server Form ──────────────────────────────────────────────────
-function ServerForm({ roles, onSubmit, onCancel }: { roles: ServerRole[]; onSubmit: (data: any) => void; onCancel: () => void }) {
-  const [form, setForm] = useState({ hostname: '', ipAddress: '', roleId: '', os: '', cores: '', memory: '', segment: '' });
+function ServerForm({
+  roles,
+  onSubmit,
+  onCancel,
+  initialData,
+}: {
+  roles: ServerRole[];
+  onSubmit: (data: {
+    hostname: string;
+    ipAddress: string;
+    roleId: number;
+    os?: string;
+    cores?: number;
+    memory?: string;
+    segment?: string;
+  }) => void;
+  onCancel: () => void;
+  initialData?: Server | null;
+}) {
+  const [form, setForm] = useState({
+    hostname: initialData?.hostname || '',
+    ipAddress: initialData?.ipAddress || '',
+    roleId: initialData?.roleId?.toString() || '',
+    os: initialData?.os || '',
+    cores: initialData?.cores?.toString() || '',
+    memory: initialData?.memory || '',
+    segment: initialData?.segment || '',
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -418,15 +542,39 @@ function ServerForm({ roles, onSubmit, onCancel }: { roles: ServerRole[]; onSubm
       </div>
       <div className="flex justify-end gap-3 pt-2">
         <button type="button" onClick={onCancel} className="btn-secondary">Cancel</button>
-        <button type="submit" className="btn-primary">Add Server</button>
+        <button type="submit" className="btn-primary">{initialData ? 'Save Server' : 'Add Server'}</button>
       </div>
     </form>
   );
 }
 
 // ─── Database Form ────────────────────────────────────────────────
-function DatabaseForm({ onSubmit, onCancel }: { onSubmit: (data: any) => void; onCancel: () => void }) {
-  const [form, setForm] = useState({ name: '', host: '', port: '1521', dbType: 'Oracle', version: '', schemaName: '', connectionString: '' });
+function DatabaseForm({
+  onSubmit,
+  onCancel,
+  initialData,
+}: {
+  onSubmit: (data: {
+    name: string;
+    host: string;
+    port: string;
+    dbType: string;
+    version?: string;
+    schemaName?: string;
+    connectionString?: string;
+  }) => void;
+  onCancel: () => void;
+  initialData?: DatabaseInstance | null;
+}) {
+  const [form, setForm] = useState({
+    name: initialData?.name || '',
+    host: initialData?.host || '',
+    port: initialData?.port?.toString() || '1521',
+    dbType: initialData?.dbType || 'Oracle',
+    version: initialData?.version || '',
+    schemaName: initialData?.schemaName || '',
+    connectionString: initialData?.connectionString || '',
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -467,7 +615,150 @@ function DatabaseForm({ onSubmit, onCancel }: { onSubmit: (data: any) => void; o
       </div>
       <div className="flex justify-end gap-3 pt-2">
         <button type="button" onClick={onCancel} className="btn-secondary">Cancel</button>
-        <button type="submit" className="btn-primary">Add Database</button>
+        <button type="submit" className="btn-primary">{initialData ? 'Save Database' : 'Add Database'}</button>
+      </div>
+    </form>
+  );
+}
+
+// ─── Application Form ─────────────────────────────────────────────
+function ApplicationForm({
+  onSubmit,
+  onCancel,
+  initialData,
+}: {
+  onSubmit: (data: { name: string; description?: string }) => void;
+  onCancel: () => void;
+  initialData?: Application | null;
+}) {
+  const [form, setForm] = useState({
+    name: initialData?.name || '',
+    description: initialData?.description || '',
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(form);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-surface-400">Section Name *</label>
+        <input
+          className="input-field"
+          value={form.name}
+          onChange={(e) => setForm({ ...form, name: e.target.value })}
+          placeholder="e.g. Finacle Core Applications"
+          required
+        />
+      </div>
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-surface-400">Description</label>
+        <textarea
+          className="input-field min-h-[80px]"
+          value={form.description}
+          onChange={(e) => setForm({ ...form, description: e.target.value })}
+          placeholder="e.g. Core banking applications and microservices"
+        />
+      </div>
+      <div className="flex justify-end gap-3 pt-2">
+        <button type="button" onClick={onCancel} className="btn-secondary">
+          Cancel
+        </button>
+        <button type="submit" className="btn-primary">
+          {initialData ? 'Save Section' : 'Add Section'}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// ─── Environment Form ─────────────────────────────────────────────
+function EnvironmentForm({
+  onSubmit,
+  onCancel,
+  initialData,
+  envTypes,
+}: {
+  onSubmit: (data: {
+    name: string;
+    shortCode: string;
+    description?: string;
+    envType: string;
+    siteType: string;
+  }) => void;
+  onCancel: () => void;
+  initialData?: Environment | null;
+  envTypes: EnvType[];
+}) {
+  const [form, setForm] = useState({
+    name: initialData?.name || '',
+    shortCode: initialData?.shortCode || '',
+    description: initialData?.description || '',
+    envType: initialData?.envType || '',
+    siteType: initialData?.siteType || 'DC',
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(form);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-surface-400">Environment Name *</label>
+          <input
+            className="input-field"
+            value={form.name}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
+            placeholder="e.g. Production"
+            required
+          />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-surface-400">Short Code *</label>
+          <input
+            className="input-field font-mono"
+            value={form.shortCode}
+            onChange={(e) => setForm({ ...form, shortCode: e.target.value.toUpperCase() })}
+            placeholder="e.g. PROD"
+            required
+          />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium text-surface-400">Env Type *</label>
+          <select
+            className="input-field"
+            value={form.envType}
+            onChange={(e) => setForm({ ...form, envType: e.target.value })}
+            required
+          >
+            <option value="">Select type</option>
+            {envTypes.map(t => (
+              <option key={t.id} value={t.name}>{t.name}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <div className="space-y-1.5">
+        <label className="text-sm font-medium text-surface-400">Description</label>
+        <input
+          className="input-field"
+          value={form.description}
+          onChange={(e) => setForm({ ...form, description: e.target.value })}
+          placeholder="e.g. Primary production environment"
+        />
+      </div>
+      <div className="flex justify-end gap-3 pt-2">
+        <button type="button" onClick={onCancel} className="btn-secondary">
+          Cancel
+        </button>
+        <button type="submit" className="btn-primary">
+          {initialData ? 'Save Environment' : 'Add Environment'}
+        </button>
       </div>
     </form>
   );
@@ -478,37 +769,133 @@ function DatabaseForm({ onSubmit, onCancel }: { onSubmit: (data: any) => void; o
 // ═══════════════════════════════════════════════════════════════════
 export default function EnvironmentsPage() {
   const { user } = useAuth();
+  const { theme } = useTheme();
   const isAdmin = user?.role === 'ADMIN';
 
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [applications, setApplications] = useState<Application[]>([]);
   const [expandedEnvs, setExpandedEnvs] = useState<Record<number, Environment>>({});
   const [roles, setRoles] = useState<ServerRole[]>([]);
+  const [envTypes, setEnvTypes] = useState<EnvType[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedApps, setExpandedApps] = useState<Record<number, boolean>>({});
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const loadData = async () => {
+  const [showAddApp, setShowAddApp] = useState(false);
+  const [showAddEnv, setShowAddEnv] = useState(false);
+  const [selectedAppForNewEnv, setSelectedAppForNewEnv] = useState<Application | null>(null);
+
+  const [showEditApp, setShowEditApp] = useState(false);
+  const [selectedAppForEdit, setSelectedAppForEdit] = useState<Application | null>(null);
+  const [showEditEnv, setShowEditEnv] = useState(false);
+  const [selectedEnvForEdit, setSelectedEnvForEdit] = useState<Environment | null>(null);
+
+  const loadData = useCallback(async () => {
     try {
-      const [dashData, appData, roleData] = await Promise.all([
+      const [dashData, appData, roleData, envTypeData] = await Promise.all([
         envService.getDashboard(),
         envService.getApplications(),
         envService.getServerRoles(),
+        envService.getEnvTypes(),
       ]);
       setDashboard(dashData);
       setApplications(appData);
       setRoles(roleData);
-      // Auto-expand first app
-      if (appData.length > 0) {
-        setExpandedApps({ [appData[0].id]: true });
+      setEnvTypes(envTypeData);
+
+      // Fetch details for all environments in parallel to expand them by default
+      const allEnvIds = appData.flatMap(app => app.environments.map(env => env.id));
+      if (allEnvIds.length > 0) {
+        const envDetails = await Promise.all(allEnvIds.map(id => envService.getEnvironment(id)));
+        const envMap = envDetails.reduce((acc, env) => {
+          acc[env.id] = env;
+          return acc;
+        }, {} as Record<number, Environment>);
+        setExpandedEnvs(envMap);
       }
-    } catch (err) {
+
+      // Auto-expand first app on initial load only
+      if (appData.length > 0) {
+        setExpandedApps(prev => Object.keys(prev).length === 0 ? { [appData[0].id]: true } : prev);
+      }
+    } catch {
       toast.error('Failed to load data');
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { loadData(); }, [loadData]);
+
+  const handleAddApp = async (data: { name: string; description?: string }) => {
+    try {
+      await envService.createApplication(data);
+      toast.success('Section added successfully');
+      setShowAddApp(false);
+      loadData();
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: { message?: string } } } };
+      toast.error(error.response?.data?.error?.message || 'Failed to add section');
+    }
   };
 
-  useEffect(() => { loadData(); }, []);
+  const handleEditApp = async (data: { name: string; description?: string }) => {
+    if (!selectedAppForEdit) return;
+    try {
+      await envService.updateApplication(selectedAppForEdit.id, data);
+      toast.success('Section updated successfully');
+      setShowEditApp(false);
+      setSelectedAppForEdit(null);
+      loadData();
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: { message?: string } } } };
+      toast.error(error.response?.data?.error?.message || 'Failed to update section');
+    }
+  };
+
+  const handleAddEnv = async (data: {
+    name: string;
+    shortCode: string;
+    description?: string;
+    envType: string;
+    siteType: string;
+  }) => {
+    if (!selectedAppForNewEnv) return;
+    try {
+      await envService.createEnvironment({
+        ...data,
+        applicationId: selectedAppForNewEnv.id,
+      });
+      toast.success('Environment added successfully');
+      setShowAddEnv(false);
+      setSelectedAppForNewEnv(null);
+      loadData();
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: { message?: string } } } };
+      toast.error(error.response?.data?.error?.message || 'Failed to add environment');
+    }
+  };
+
+  const handleEditEnv = async (data: {
+    name: string;
+    shortCode: string;
+    description?: string;
+    envType: string;
+    siteType: string;
+  }) => {
+    if (!selectedEnvForEdit) return;
+    try {
+      await envService.updateEnvironment(selectedEnvForEdit.id, data);
+      toast.success('Environment updated successfully');
+      setShowEditEnv(false);
+      setSelectedEnvForEdit(null);
+      loadData();
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: { message?: string } } } };
+      toast.error(error.response?.data?.error?.message || 'Failed to update environment');
+    }
+  };
 
   const loadEnvironment = async (envId: number) => {
     if (expandedEnvs[envId]) {
@@ -526,8 +913,16 @@ export default function EnvironmentsPage() {
     }
   };
 
-  const scrollToEnv = (envId: number) => {
-    loadEnvironment(envId);
+  const scrollToEnv = async (envId: number) => {
+    if (!expandedEnvs[envId]) {
+      try {
+        const env = await envService.getEnvironment(envId);
+        setExpandedEnvs(prev => ({ ...prev, [envId]: env }));
+      } catch {
+        toast.error('Failed to load environment');
+        return;
+      }
+    }
     setTimeout(() => {
       document.getElementById(`env-${envId}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 100);
@@ -550,17 +945,60 @@ export default function EnvironmentsPage() {
     );
   }
 
-  // Chart colors
-  const CHART_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#f43f5e', '#8b5cf6', '#64748b', '#06b6d4', '#ec4899'];
+  // Chart colors aligned with Axis Bank brand (burgundy-based for light, mint-based for dark)
+  const CHART_COLORS = theme === 'light'
+    ? ['#97144d', '#c1216b', '#db2777', '#008269', '#005a48', '#b45309', '#0284c7', '#4f46e5']
+    : ['#00c5a0', '#10b981', '#06b6d4', '#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#f43f5e'];
+
+  const filteredApplications = applications.map(app => {
+    const appMatches = app.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                       (app.description && app.description.toLowerCase().includes(searchQuery.toLowerCase()));
+
+    const filteredEnvs = app.environments.filter(envSummary => {
+      if (!searchQuery) return true;
+      
+      const envTextMatches = envSummary.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                             envSummary.shortCode.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                             (envSummary.description && envSummary.description.toLowerCase().includes(searchQuery.toLowerCase()));
+      if (envTextMatches || appMatches) return true;
+
+      const envDetails = expandedEnvs[envSummary.id];
+      if (envDetails) {
+        const serverMatches = envDetails.servers?.some(s => 
+          s.hostname.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          s.ipAddress.includes(searchQuery.toLowerCase()) ||
+          s.role.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (s.os && s.os.toLowerCase().includes(searchQuery.toLowerCase())) ||
+          (s.segment && s.segment.toLowerCase().includes(searchQuery.toLowerCase()))
+        );
+        if (serverMatches) return true;
+
+        const dbMatches = envDetails.databases?.some(d =>
+          d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          d.host.includes(searchQuery.toLowerCase()) ||
+          d.dbType.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (d.schemaName && d.schemaName.toLowerCase().includes(searchQuery.toLowerCase()))
+        );
+        if (dbMatches) return true;
+      }
+      
+      return false;
+    });
+
+    return {
+      ...app,
+      environments: filteredEnvs
+    };
+  }).filter(app => app.environments.length > 0 || app.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <div className="space-y-6">
       {/* ─── Summary Cards ──────────────────────────────────────── */}
       <div className="grid grid-cols-4 gap-4">
-        <SummaryCard icon={AppWindow} label="Applications" value={dashboard?.summary.applications || 0} color="#6366f1" delay={0} />
-        <SummaryCard icon={Globe} label="Environments" value={dashboard?.summary.environments || 0} color="#10b981" delay={0.05} />
-        <SummaryCard icon={Server} label="Servers" value={dashboard?.summary.servers || 0} color="#f59e0b" delay={0.1} />
-        <SummaryCard icon={Database} label="Databases" value={dashboard?.summary.databases || 0} color="#f43f5e" delay={0.15} />
+        <SummaryCard icon={AppWindow} label="Applications" value={dashboard?.summary.applications || 0} color={theme === 'light' ? '#97144d' : '#00c5a0'} delay={0} />
+        <SummaryCard icon={Globe} label="Environments" value={dashboard?.summary.environments || 0} color={theme === 'light' ? '#db2777' : '#10b981'} delay={0.05} />
+        <SummaryCard icon={ServerIcon} label="Servers" value={dashboard?.summary.servers || 0} color={theme === 'light' ? '#008269' : '#06b6d4'} delay={0.1} />
+        <SummaryCard icon={Database} label="Databases" value={dashboard?.summary.databases || 0} color={theme === 'light' ? '#0284c7' : '#8b5cf6'} delay={0.15} />
       </div>
 
       {/* ─── Charts Row ─────────────────────────────────────────── */}
@@ -581,20 +1019,26 @@ export default function EnvironmentsPage() {
               layout="vertical"
               margin={{ left: 80, right: 10, top: 5, bottom: 5 }}
             >
-              <XAxis type="number" tick={{ fill: '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
+              <XAxis type="number" tick={{ fill: theme === 'light' ? '#475569' : '#64748b', fontSize: 11 }} axisLine={false} tickLine={false} />
               <YAxis
                 type="category"
                 dataKey="shortCode"
-                tick={{ fill: '#94a3b8', fontSize: 11 }}
+                tick={{ fill: theme === 'light' ? '#334155' : '#cbd5e1', fontSize: 11 }}
                 axisLine={false}
                 tickLine={false}
                 width={80}
               />
               <Tooltip
-                contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }}
-                labelStyle={{ color: '#e2e8f0' }}
+                contentStyle={{
+                  backgroundColor: theme === 'light' ? '#ffffff' : '#1e293b',
+                  border: theme === 'light' ? '1px solid #cbd5e1' : '1px solid #334155',
+                  borderRadius: 8,
+                  fontSize: 12,
+                  color: theme === 'light' ? '#0f172a' : '#f1f5f9',
+                }}
+                labelStyle={{ color: theme === 'light' ? '#0f172a' : '#e2e8f0' }}
               />
-              <Bar dataKey="total" fill="#6366f1" radius={[0, 4, 4, 0]} />
+              <Bar dataKey="total" fill={theme === 'light' ? '#97144d' : '#00c5a0'} radius={[0, 4, 4, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </motion.div>
@@ -628,7 +1072,13 @@ export default function EnvironmentsPage() {
                   ))}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }}
+                  contentStyle={{
+                    backgroundColor: theme === 'light' ? '#ffffff' : '#1e293b',
+                    border: theme === 'light' ? '1px solid #cbd5e1' : '1px solid #334155',
+                    borderRadius: 8,
+                    fontSize: 12,
+                    color: theme === 'light' ? '#0f172a' : '#f1f5f9',
+                  }}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -672,7 +1122,13 @@ export default function EnvironmentsPage() {
                   ))}
                 </Pie>
                 <Tooltip
-                  contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: 8, fontSize: 12 }}
+                  contentStyle={{
+                    backgroundColor: theme === 'light' ? '#ffffff' : '#1e293b',
+                    border: theme === 'light' ? '1px solid #cbd5e1' : '1px solid #334155',
+                    borderRadius: 8,
+                    fontSize: 12,
+                    color: theme === 'light' ? '#0f172a' : '#f1f5f9',
+                  }}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -689,6 +1145,39 @@ export default function EnvironmentsPage() {
       </div>
 
       {/* ─── Environments List with Jump-To Sidebar ────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35, duration: 0.3 }}
+        className="flex items-center justify-between border-b border-surface-700/30 pb-3 mb-4"
+      >
+        <div>
+          <h2 className="text-xl font-bold text-surface-100">Applications & Environments</h2>
+          <p className="text-sm text-surface-500">Configure sections and environment instances.</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-surface-500" />
+            <input
+              type="text"
+              placeholder="Search sections, envs, servers, IPs, DBs..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="input-field text-sm py-1.5 pl-9 pr-4 w-72"
+            />
+          </div>
+          {isAdmin && (
+            <button
+              onClick={() => setShowAddApp(true)}
+              className="btn-primary flex items-center gap-2 text-xs py-2 px-3 flex-shrink-0"
+            >
+              <Plus size={16} />
+              Add Section
+            </button>
+          )}
+        </div>
+      </motion.div>
+
       <div className="flex gap-6">
         {/* Jump-To Sidebar */}
         <motion.div
@@ -744,28 +1233,60 @@ export default function EnvironmentsPage() {
 
         {/* Environment Cards */}
         <div className="flex-1 space-y-4">
-          {applications.map((app) => (
+          {filteredApplications.map((app, index) => (
             <motion.div
               key={app.id}
-              initial={{ opacity: 0, y: 10 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 + index * 0.1, duration: 0.3 }}
             >
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-400">
-                  <AppWindow size={18} />
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-400">
+                    <AppWindow size={18} />
+                  </div>
+                  <h2 className="text-lg font-semibold text-surface-200">{app.name}</h2>
+                  <span className="text-xs text-surface-500">
+                    {app.environments.length} environment{app.environments.length !== 1 ? 's' : ''}
+                  </span>
                 </div>
-                <h2 className="text-lg font-semibold text-surface-200">{app.name}</h2>
-                <span className="text-xs text-surface-500">
-                  {app.environments.length} environment{app.environments.length !== 1 ? 's' : ''}
-                </span>
+                {isAdmin && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        setSelectedAppForEdit(app);
+                        setShowEditApp(true);
+                      }}
+                      className="p-1 rounded hover:bg-surface-800 text-surface-400 hover:text-brand-400 transition-colors"
+                      title="Edit Section"
+                    >
+                      <Edit3 size={15} />
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedAppForNewEnv(app);
+                        setShowAddEnv(true);
+                      }}
+                      className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1"
+                    >
+                      <Plus size={14} />
+                      Add Environment
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-4">
-                {app.environments.map((envSummary) => {
+                {app.environments.map((envSummary, envIndex) => {
                   const env = expandedEnvs[envSummary.id];
 
                   return (
-                    <div key={envSummary.id}>
+                    <motion.div
+                      key={envSummary.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.45 + index * 0.1 + envIndex * 0.05, duration: 0.25 }}
+                    >
                       {/* Collapsed summary */}
                       {!env && (
                         <motion.button
@@ -803,16 +1324,49 @@ export default function EnvironmentsPage() {
                             loadData();
                           }}
                           isAdmin={isAdmin}
+                          onEditEnv={(e) => {
+                            setSelectedEnvForEdit(e);
+                            setShowEditEnv(true);
+                          }}
+                          onCollapse={loadEnvironment}
+                          searchQuery={searchQuery}
                         />
                       )}
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>
             </motion.div>
           ))}
+          {filteredApplications.length === 0 && (
+            <div className="glass-card p-12 text-center text-surface-400">
+              <Search size={32} className="mx-auto text-surface-500 mb-3" />
+              <p className="font-semibold text-surface-200">No matches found</p>
+              <p className="text-xs text-surface-500 mt-1">Try refining your search terms for sections, environments, server hostnames/IPs, or database instances.</p>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Add Section (Application) Modal */}
+      <Modal isOpen={showAddApp} onClose={() => setShowAddApp(false)} title="Add Section">
+        <ApplicationForm onSubmit={handleAddApp} onCancel={() => setShowAddApp(false)} />
+      </Modal>
+
+      {/* Edit Section Modal */}
+      <Modal isOpen={showEditApp} onClose={() => { setShowEditApp(false); setSelectedAppForEdit(null); }} title="Edit Section">
+        <ApplicationForm onSubmit={handleEditApp} onCancel={() => { setShowEditApp(false); setSelectedAppForEdit(null); }} initialData={selectedAppForEdit} />
+      </Modal>
+
+      {/* Add Environment Modal */}
+      <Modal isOpen={showAddEnv} onClose={() => { setShowAddEnv(false); setSelectedAppForNewEnv(null); }} title={`Add Environment to ${selectedAppForNewEnv?.name || 'Section'}`}>
+        <EnvironmentForm onSubmit={handleAddEnv} onCancel={() => { setShowAddEnv(false); setSelectedAppForNewEnv(null); }} envTypes={envTypes} />
+      </Modal>
+
+      {/* Edit Environment Modal */}
+      <Modal isOpen={showEditEnv} onClose={() => { setShowEditEnv(false); setSelectedEnvForEdit(null); }} title="Edit Environment">
+        <EnvironmentForm onSubmit={handleEditEnv} onCancel={() => { setShowEditEnv(false); setSelectedEnvForEdit(null); }} initialData={selectedEnvForEdit} envTypes={envTypes} />
+      </Modal>
     </div>
   );
 }

@@ -1,5 +1,61 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
+:root {
+  /* Default: Dark mode values */
+  --color-surface-50: 245 245 247;
+  --color-surface-100: 224 224 230;
+  --color-surface-200: 186 186 195;
+  --color-surface-300: 140 140 150;
+  --color-surface-400: 100 100 110;
+  --color-surface-500: 75 75 85;
+  --color-surface-600: 50 50 60;
+  --color-surface-700: 35 35 45;
+  --color-surface-800: 24 24 30;
+  --color-surface-850: 18 18 24;
+  --color-surface-900: 14 14 18;
+  --color-surface-950: 10 10 12;
+
+  --color-brand-50: 230 250 245;
+  --color-brand-100: 204 245 235;
+  --color-brand-200: 153 235 220;
+  --color-brand-300: 102 224 200;
+  --color-brand-400: 51 214 180;
+  --color-brand-500: 0 197 160;     /* Mint green #00c5a0 */
+  --color-brand-600: 0 163 132;     /* Mint hover #00a384 */
+  --color-brand-700: 0 130 105;     /* Darker mint #008269 */
+  --color-brand-800: 0 99 80;
+  --color-brand-900: 0 66 53;
+  --color-brand-950: 0 33 27;
+}
+
+:root.light {
+  /* Light mode: inverted surface colors and Axis burgundy brand */
+  --color-surface-50: 10 10 12;
+  --color-surface-100: 14 14 18;
+  --color-surface-200: 18 18 24;
+  --color-surface-300: 24 24 30;
+  --color-surface-400: 35 35 45;
+  --color-surface-500: 75 75 85;
+  --color-surface-600: 100 100 110;
+  --color-surface-700: 186 186 195;
+  --color-surface-800: 224 224 230;
+  --color-surface-850: 240 240 245;
+  --color-surface-900: 255 255 255;
+  --color-surface-950: 246 246 248;
+
+  --color-brand-50: 254 242 247;
+  --color-brand-100: 253 204 228;
+  --color-brand-200: 248 151 196;
+  --color-brand-300: 240 104 168;
+  --color-brand-400: 227 67 145;
+  --color-brand-500: 151 20 77;     /* Axis Burgundy #97144d */
+  --color-brand-600: 122 14 60;     /* Burgundy hover #7a0e3c */
+  --color-brand-700: 95 10 46;      /* Darker burgundy #5f0a2e */
+  --color-brand-800: 74 8 36;
+  --color-brand-900: 51 5 25;
+  --color-brand-950: 31 3 15;
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -51,6 +107,51 @@
 
   .glass-card-hover:hover {
     @apply bg-surface-800/70 border-surface-600/50 shadow-xl -translate-y-0.5;
+  }
+
+  /* Light mode brand container overrides */
+  .light .glass-card {
+    background-color: #ffffff;
+    border-color: rgba(151, 20, 77, 0.12); /* very subtle burgundy border */
+    box-shadow: 0 4px 20px -2px rgba(151, 20, 77, 0.05), 0 2px 8px -1px rgba(0, 0, 0, 0.03);
+    backdrop-filter: none;
+  }
+
+  .light .glass-card-hover:hover {
+    background-color: #ffffff;
+    border-color: rgba(151, 20, 77, 0.22); /* slightly stronger border on hover */
+    box-shadow: 0 10px 25px -3px rgba(151, 20, 77, 0.08), 0 4px 12px -2px rgba(0, 0, 0, 0.04);
+    transform: translateY(-2px);
+  }
+
+  .light .input-field {
+    background-color: rgba(254, 242, 247, 0.95);
+    border-color: rgba(253, 204, 228, 0.85);
+    color: rgb(151 20 77); /* Burgundy text */
+  }
+
+  .light .input-field::placeholder {
+    color: rgba(151, 20, 77, 0.55);
+  }
+
+  .light .table-row:hover {
+    background-color: rgba(254, 242, 247, 0.75); /* brand-50 with 75% opacity */
+  }
+
+  .light .nav-item:hover {
+    background-color: rgba(254, 242, 247, 0.85);
+    color: rgb(151 20 77);
+  }
+
+  .light .btn-secondary {
+    background-color: rgba(254, 242, 247, 0.95);
+    border-color: rgba(253, 204, 228, 0.9);
+    color: rgb(151 20 77);
+  }
+
+  .light .btn-secondary:hover {
+    background-color: rgba(253, 204, 228, 0.75);
+    border-color: rgba(248, 151, 196, 0.85);
   }
 
   /* Glow effects for badges */

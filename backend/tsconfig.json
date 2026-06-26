@@ -13,13 +13,12 @@
     "declaration": true,
     "declarationMap": true,
     "sourceMap": true,
-    "baseUrl": "./src",
     "paths": {
-      "@core/*": ["core/*"],
-      "@plugins/*": ["plugins/*"],
-      "@types/*": ["types/*"]
+      "@core/*": ["./src/core/*"],
+      "@plugins/*": ["./src/plugins/*"],
+      "@types/*": ["./src/types/*"]
     }
   },
-  "include": ["src/**/*", "prisma/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "prisma"]
 }

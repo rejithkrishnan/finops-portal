@@ -49,6 +49,11 @@ const roleSchema = z.object({
   description: z.string().optional(),
 });
 
+const envTypeSchema = z.object({
+  name: z.string().min(1).max(50),
+  description: z.string().optional(),
+});
+
 // ─── Dashboard ────────────────────────────────────────────────────
 
 router.get('/dashboard', authenticate, async (_req: Request, res: Response, next: NextFunction) => {
@@ -69,7 +74,7 @@ router.get('/applications', authenticate, async (_req: Request, res: Response, n
 
 router.get('/applications/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = await service.getApplication(parseInt(req.params.id));
+    const data = await service.getApplication(parseInt(req.params.id as string));
     res.json({ success: true, data });
   } catch (error) { next(error); }
 });
@@ -85,14 +90,14 @@ router.post('/applications', authenticate, authorize('ADMIN'), async (req: Reque
 router.put('/applications/:id', authenticate, authorize('ADMIN'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = appSchema.partial().parse(req.body);
-    const data = await service.updateApplication(parseInt(req.params.id), body);
+    const data = await service.updateApplication(parseInt(req.params.id as string), body);
     res.json({ success: true, data });
   } catch (error) { next(error); }
 });
 
 router.delete('/applications/:id', authenticate, authorize('ADMIN'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await service.deleteApplication(parseInt(req.params.id));
+    await service.deleteApplication(parseInt(req.params.id as string));
     res.json({ success: true, message: 'Application deleted' });
   } catch (error) { next(error); }
 });
@@ -109,7 +114,7 @@ router.get('/environments', authenticate, async (req: Request, res: Response, ne
 
 router.get('/environments/:id', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = await service.getEnvironment(parseInt(req.params.id));
+    const data = await service.getEnvironment(parseInt(req.params.id as string));
     res.json({ success: true, data });
   } catch (error) { next(error); }
 });
@@ -125,14 +130,14 @@ router.post('/environments', authenticate, authorize('ADMIN'), async (req: Reque
 router.put('/environments/:id', authenticate, authorize('ADMIN'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = envSchema.partial().parse(req.body);
-    const data = await service.updateEnvironment(parseInt(req.params.id), body);
+    const data = await service.updateEnvironment(parseInt(req.params.id as string), body);
     res.json({ success: true, data });
   } catch (error) { next(error); }
 });
 
 router.delete('/environments/:id', authenticate, authorize('ADMIN'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await service.deleteEnvironment(parseInt(req.params.id));
+    await service.deleteEnvironment(parseInt(req.params.id as string));
     res.json({ success: true, message: 'Environment deleted' });
   } catch (error) { next(error); }
 });
@@ -141,7 +146,7 @@ router.delete('/environments/:id', authenticate, authorize('ADMIN'), async (req:
 
 router.get('/environments/:envId/servers', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = await service.listServers(parseInt(req.params.envId));
+    const data = await service.listServers(parseInt(req.params.envId as string));
     res.json({ success: true, data });
   } catch (error) { next(error); }
 });
@@ -149,7 +154,7 @@ router.get('/environments/:envId/servers', authenticate, async (req: Request, re
 router.post('/environments/:envId/servers', authenticate, authorize('ADMIN', 'OPERATOR'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = serverSchema.parse(req.body);
-    const data = await service.createServer({ ...body, environmentId: parseInt(req.params.envId) });
+    const data = await service.createServer({ ...body, environmentId: parseInt(req.params.envId as string) });
     res.status(201).json({ success: true, data });
   } catch (error) { next(error); }
 });
@@ -157,14 +162,14 @@ router.post('/environments/:envId/servers', authenticate, authorize('ADMIN', 'OP
 router.put('/servers/:id', authenticate, authorize('ADMIN', 'OPERATOR'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = serverSchema.partial().parse(req.body);
-    const data = await service.updateServer(parseInt(req.params.id), body);
+    const data = await service.updateServer(parseInt(req.params.id as string), body);
     res.json({ success: true, data });
   } catch (error) { next(error); }
 });
 
 router.delete('/servers/:id', authenticate, authorize('ADMIN'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await service.deleteServer(parseInt(req.params.id));
+    await service.deleteServer(parseInt(req.params.id as string));
     res.json({ success: true, message: 'Server deleted' });
   } catch (error) { next(error); }
 });
@@ -173,7 +178,7 @@ router.delete('/servers/:id', authenticate, authorize('ADMIN'), async (req: Requ
 
 router.get('/environments/:envId/databases', authenticate, async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const data = await service.listDatabases(parseInt(req.params.envId));
+    const data = await service.listDatabases(parseInt(req.params.envId as string));
     res.json({ success: true, data });
   } catch (error) { next(error); }
 });
@@ -181,7 +186,7 @@ router.get('/environments/:envId/databases', authenticate, async (req: Request, 
 router.post('/environments/:envId/databases', authenticate, authorize('ADMIN', 'OPERATOR'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = dbSchema.parse(req.body);
-    const data = await service.createDatabase({ ...body, environmentId: parseInt(req.params.envId) });
+    const data = await service.createDatabase({ ...body, environmentId: parseInt(req.params.envId as string) });
     res.status(201).json({ success: true, data });
   } catch (error) { next(error); }
 });
@@ -189,14 +194,14 @@ router.post('/environments/:envId/databases', authenticate, authorize('ADMIN', '
 router.put('/databases/:id', authenticate, authorize('ADMIN', 'OPERATOR'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = dbSchema.partial().parse(req.body);
-    const data = await service.updateDatabase(parseInt(req.params.id), body);
+    const data = await service.updateDatabase(parseInt(req.params.id as string), body);
     res.json({ success: true, data });
   } catch (error) { next(error); }
 });
 
 router.delete('/databases/:id', authenticate, authorize('ADMIN'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await service.deleteDatabase(parseInt(req.params.id));
+    await service.deleteDatabase(parseInt(req.params.id as string));
     res.json({ success: true, message: 'Database deleted' });
   } catch (error) { next(error); }
 });
@@ -221,15 +226,47 @@ router.post('/server-roles', authenticate, authorize('ADMIN'), async (req: Reque
 router.put('/server-roles/:id', authenticate, authorize('ADMIN'), async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = roleSchema.partial().parse(req.body);
-    const data = await service.updateServerRole(parseInt(req.params.id), body);
+    const data = await service.updateServerRole(parseInt(req.params.id as string), body);
     res.json({ success: true, data });
   } catch (error) { next(error); }
 });
 
 router.delete('/server-roles/:id', authenticate, authorize('ADMIN'), async (req: Request, res: Response, next: NextFunction) => {
   try {
-    await service.deleteServerRole(parseInt(req.params.id));
+    await service.deleteServerRole(parseInt(req.params.id as string));
     res.json({ success: true, message: 'Server role deleted' });
+  } catch (error) { next(error); }
+});
+
+// ─── Env Types ────────────────────────────────────────────────────
+
+router.get('/env-types', authenticate, async (_req: Request, res: Response, next: NextFunction) => {
+  try {
+    const data = await service.listEnvTypes();
+    res.json({ success: true, data });
+  } catch (error) { next(error); }
+});
+
+router.post('/env-types', authenticate, authorize('ADMIN'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const body = envTypeSchema.parse(req.body);
+    const data = await service.createEnvType(body);
+    res.status(201).json({ success: true, data });
+  } catch (error) { next(error); }
+});
+
+router.put('/env-types/:id', authenticate, authorize('ADMIN'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const body = envTypeSchema.partial().parse(req.body);
+    const data = await service.updateEnvType(parseInt(req.params.id as string), body);
+    res.json({ success: true, data });
+  } catch (error) { next(error); }
+});
+
+router.delete('/env-types/:id', authenticate, authorize('ADMIN'), async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    await service.deleteEnvType(parseInt(req.params.id as string));
+    res.json({ success: true, message: 'Environment type deleted' });
   } catch (error) { next(error); }
 });
 

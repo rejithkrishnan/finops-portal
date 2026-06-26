@@ -91,3 +91,23 @@ export const updateServerRole = (id: number, data: Partial<{ name: string; color
 
 export const deleteServerRole = (id: number) =>
   api.delete(`/server-roles/${id}`);
+
+export interface EnvType {
+  id: number;
+  name: string;
+  description: string | null;
+  createdAt: string;
+}
+
+// ─── Env Types ────────────────────────────────────────────────────
+export const getEnvTypes = () =>
+  api.get<ApiResponse<EnvType[]>>('/env-types').then(r => r.data.data);
+
+export const createEnvType = (data: { name: string; description?: string }) =>
+  api.post<ApiResponse<EnvType>>('/env-types', data).then(r => r.data.data);
+
+export const updateEnvType = (id: number, data: Partial<{ name: string; description: string }>) =>
+  api.put<ApiResponse<EnvType>>(`/env-types/${id}`, data).then(r => r.data.data);
+
+export const deleteEnvType = (id: number) =>
+  api.delete(`/env-types/${id}`);

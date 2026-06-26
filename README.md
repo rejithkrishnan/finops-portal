@@ -1,6 +1,6 @@
 # 🏛️ Axis Bank Finacle Operations Portal (FinOps Portal)
 
-A modern, extensible operations and infrastructure management dashboard for Finacle core banking servers and databases. Built on a modular, three-layer plugin-based architecture, this platform empowers Axis Bank operations teams to manage environments, execute End of Day (EOD) jobs, monitor system health, and orchestrate service deployments from a centralized, secure interface.
+A modern, extensible operations and infrastructure management dashboard for Finacle core banking servers and databases. Built on a modular, three-layer database-configurable architecture, this platform empowers Axis Bank operations teams to manage environments, execute End of Day (EOD) jobs, monitor system health, and orchestrate service deployments from a centralized, secure interface.
 
 ---
 
@@ -11,9 +11,10 @@ A modern, extensible operations and infrastructure management dashboard for Fina
   1. **Frontend Interface**: React-based monitoring and execution triggers.
   2. **Application Layer**: Central Node.js server orchestrating requests and maintaining status logs.
   3. **Local Agent**: A lightweight Python HTTP agent deployed directly on AIX/Linux Finacle servers to securely execute tasks locally.
-- **🔌 Extensible Plugin Architecture**: Dynamically registers new apps and tools under `/backend/src/plugins/` using an auto-discovery module loader.
+- **🔌 Database-Configurable Portal**: Add new applications directly in the database (or via admin dashboard in the future) and they will immediately populate the sidebar navigation and metrics dashboards dynamically without code changes.
 - **🛡️ Secure Access & RBAC**: Integrated JWT authentication with Access/Refresh token rotation and role-based access controls (`ADMIN`, `OPERATOR`, `VIEWER`).
 - **📊 Real-time Monitoring & Statistics**: Deep insight visualization for active servers, database health (Oracle 19c, PostgreSQL), and batch-job runs.
+- **🌓 Dual Theme Support**: Smooth toggle between Light and Dark modes, dynamically adjusting system colors, tables, and charting axes on the fly.
 
 ---
 
@@ -37,7 +38,7 @@ graph TD
     
     subgraph app_layer ["Application Layer - Express API Server"]
         E[Auth Middleware]
-        F[Plugin Registry]
+        F[API Routers]
         G[Environments Service]
         H[EOD Execution Engine]
     end
@@ -88,14 +89,17 @@ graph TD
 
 ```text
 finops-portal/
+├── db/                         # Database orchestration and helpers
+│   ├── docker-compose.yml      # Starts PostgreSQL container on port 54332
+│   ├── start.bat               # Helper script to launch database
+│   └── stop.bat                # Helper script to stop database
 ├── backend/
 │   ├── prisma/
 │   │   ├── schema.prisma       # Database schema models (User, Application, Server, DB, etc.)
 │   │   └── seed.ts             # Default admin, role, server, and application records
 │   ├── src/
 │   │   ├── core/               # Global features (Auth, DB connection, middleware, config)
-│   │   ├── plugins/            # Auto-discovered plugin modules (e.g. Environments)
-│   │   ├── plugin-registry.ts  # Dynamic plugin discovery and registration
+│   │   ├── plugins/            # Feature directories (e.g., Environments)
 │   │   └── server.ts           # Express server entry point
 │   ├── package.json
 │   └── tsconfig.json
@@ -109,6 +113,9 @@ finops-portal/
 │   │   └── main.tsx            # React application mount
 │   ├── package.json
 │   └── vite.config.ts
+├── start_all.bat               # Starts all three layers (DB, BE, FE) on Windows
+├── start_all.sh                # Starts all three layers on Linux/WSL/Git Bash
+├── stop_all.bat                # Stops all three layers on Windows
 └── requirement.txt             # Original bank specifications and offline constraints
 ```
 
@@ -118,17 +125,43 @@ finops-portal/
 
 ### Prerequisites
 - **Node.js** (v18 or higher recommended)
-- **PostgreSQL** instance running locally or on a server
+- **Docker Desktop** (running)
 
-### 1. Database & Environment Configuration
+### 🚀 Standard Quick Start (All Services)
+You can spin up all layers (PostgreSQL DB, Backend Server, and Frontend Web) simultaneously using the root orchestration scripts:
+- **On Windows (CMD/PowerShell)**: 
+  - **Start all**: Double-click or run [start_all.bat](file:///d:/Coding/finops-portal/start_all.bat) at the root level.
+  - **Stop all**: Double-click or run [stop_all.bat](file:///d:/Coding/finops-portal/stop_all.bat) at the root level.
+- **On Unix/Git Bash/WSL**: 
+  - **Start & Stop**: Run `./start_all.sh` at the root level, and press `Ctrl+C` in that terminal to stop all services.
+
+Both start scripts will automatically:
+1. Start the Docker database container.
+2. Check and install package dependencies in `/backend` and `/frontend`.
+3. Generate the Prisma database client.
+4. Launch backend and frontend development servers.
+
+---
+
+### 🔧 Manual Step-by-Step Setup
+
+#### 1. Database Startup & Configuration
+If you prefer starting services manually:
+
+##### A. Starting the Database via Docker
+1. Ensure **Docker Desktop** is running.
+2. Run [start.bat](file:///d:/Coding/finops-portal/db/start.bat) inside the `db` directory to launch PostgreSQL on port `54332`.
+3. To stop it, run [stop.bat](file:///d:/Coding/finops-portal/db/stop.bat).
+
+##### B. Backend Environment File Configuration
 In the `/backend/` directory, create a `.env` file containing:
 
 ```env
 PORT=3001
 NODE_ENV=development
 
-# Adjust username, password, host, port, and db name according to your local Postgres setup
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/finops_portal?schema=public"
+# Adjust username, password, host, port (54332), and db name according to setup
+DATABASE_URL="postgresql://postgres:postgres@localhost:54332/finops_portal?schema=public"
 
 JWT_SECRET=finops-portal-secret-key-change-in-production
 JWT_REFRESH_SECRET=finops-portal-refresh-secret-key-change-in-production
@@ -138,7 +171,7 @@ JWT_REFRESH_EXPIRES_IN=7d
 CORS_ORIGIN=http://localhost:5173
 ```
 
-### 2. Backend Installation & Startup
+#### 2. Backend Installation & Startup
 Open a terminal in the `/backend/` directory:
 
 ```bash
@@ -148,7 +181,10 @@ npm install
 # Generate Prisma Client models
 npm run db:generate
 
-# Execute database migrations
+# Synchronize / Migrate database schema (choose one):
+# A) Push schema directly (Recommended for fresh local containers):
+npm run db:push
+# B) Run Prisma migrations (For tracking versioned schema changes):
 npm run db:migrate
 
 # Seed database with base roles, test environments, and default admin user

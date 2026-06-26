@@ -8,6 +8,7 @@ import {
   ListChecks,
   ChevronLeft,
   ChevronRight,
+  Settings,
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -100,6 +101,39 @@ export default function Sidebar() {
           );
         })}
       </nav>
+
+      {/* Settings Link */}
+      <div className="px-2 pb-2 border-t border-surface-800 pt-2">
+        <NavLink
+          to="/settings"
+          className={({ isActive }) => `
+            nav-item relative group
+            ${isActive ? 'nav-item-active' : ''}
+          `}
+        >
+          {({ isActive }) => (
+            <>
+              {isActive && (
+                <motion.div
+                  layoutId="sidebar-indicator"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-brand-400 rounded-r-full"
+                  transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+                />
+              )}
+              <Settings size={20} className="flex-shrink-0" />
+              {!collapsed && (
+                <motion.span
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="whitespace-nowrap"
+                >
+                  Settings
+                </motion.span>
+              )}
+            </>
+          )}
+        </NavLink>
+      </div>
 
       {/* Collapse toggle */}
       <button

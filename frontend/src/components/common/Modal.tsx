@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface ModalProps {
   isOpen: boolean;
@@ -34,7 +35,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
     lg: 'max-w-2xl',
   };
 
-  return (
+  return createPortal(
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -68,6 +69,7 @@ export default function Modal({ isOpen, onClose, title, children, size = 'md' }:
 
         {children}
       </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body
   );
 }

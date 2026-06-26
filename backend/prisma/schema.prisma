@@ -110,3 +110,12 @@ model DatabaseInstance {
 
   @@map("database_instances")
 }
+
+model EnvType {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("env_types")
+}

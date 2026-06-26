@@ -327,3 +327,30 @@ export async function deleteServerRole(id: number) {
   }
   return prisma.serverRole.delete({ where: { id } });
 }
+
+// ─── Env Types ────────────────────────────────────────────────────
+
+export async function listEnvTypes() {
+  return prisma.envType.findMany({
+    orderBy: { name: 'asc' },
+  });
+}
+
+export async function createEnvType(data: { name: string; description?: string }) {
+  return prisma.envType.create({ data });
+}
+
+export async function updateEnvType(id: number, data: Partial<{ name: string; description: string }>) {
+  return prisma.envType.update({ where: { id }, data });
+}
+
+export async function deleteEnvType(id: number) {
+  const envType = await prisma.envType.findUnique({ where: { id } });
+  if (envType) {
+    const count = await prisma.environment.count({ where: { envType: envType.name, isActive: true } });
+    if (count > 0) {
+      throw new ApiError(400, `Cannot delete type: ${count} active environments use this type`);
+    }
+  }
+  return prisma.envType.delete({ where: { id } });
+}

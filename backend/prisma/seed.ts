@@ -42,6 +42,26 @@ async function main() {
     console.log(`✓ Server Role: ${r.name} (${r.color})`);
   }
 
+  // ─── Create Environment Types ────────────────────────────────────
+  const envTypes = [
+    { name: 'PROD', description: 'Production Environment' },
+    { name: 'UAT', description: 'User Acceptance Testing' },
+    { name: 'DEV', description: 'Development Environment' },
+    { name: 'DR', description: 'Disaster Recovery' },
+    { name: 'PT', description: 'Performance Testing' },
+    { name: 'PREPROD', description: 'Pre-Production Environment' },
+    { name: 'FININQ', description: 'Finacle Inquiry' },
+  ];
+
+  for (const type of envTypes) {
+    await prisma.envType.upsert({
+      where: { name: type.name },
+      update: { description: type.description },
+      create: type,
+    });
+    console.log(`✓ Env Type: ${type.name}`);
+  }
+
   // ─── Create Applications ───────────────────────────────────────
   const finacle = await prisma.application.upsert({
     where: { name: 'Finacle' },
