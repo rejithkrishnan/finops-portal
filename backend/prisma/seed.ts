@@ -243,7 +243,7 @@ async function main() {
         port: 1521,
         dbType: 'Oracle',
         version: '19c',
-        schemaName: 'FINACLE',
+        sid: 'FINACLE',
         connectionString: 'jdbc:oracle:thin:@10.8.150.100:1521/FINPROD',
       },
     });
@@ -261,7 +261,7 @@ async function main() {
         port: 1521,
         dbType: 'Oracle',
         version: '19c',
-        schemaName: 'FININQ',
+        sid: 'FININQ',
         connectionString: 'jdbc:oracle:thin:@10.5.21.168:1521/FININQDB',
       },
     });

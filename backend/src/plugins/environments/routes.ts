@@ -39,7 +39,7 @@ const dbSchema = z.object({
   port: z.number().int().positive(),
   dbType: z.string().min(1),
   version: z.string().optional(),
-  schemaName: z.string().optional(),
+  sid: z.string().optional(),
   connectionString: z.string().optional(),
 });
 

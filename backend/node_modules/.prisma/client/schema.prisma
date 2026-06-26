@@ -101,7 +101,7 @@ model DatabaseInstance {
   port             Int
   dbType           String      @map("db_type") // Oracle, PostgreSQL, etc.
   version          String?
-  schemaName       String?     @map("schema_name")
+  sid              String?     @map("sid")
   connectionString String?     @map("connection_string")
   isActive         Boolean     @default(true) @map("is_active")
   createdAt        DateTime    @default(now()) @map("created_at")

@@ -278,7 +278,7 @@ export async function createDatabase(data: {
   port: number;
   dbType: string;
   version?: string;
-  schemaName?: string;
+  sid?: string;
   connectionString?: string;
 }) {
   return prisma.databaseInstance.create({ data });
@@ -290,7 +290,7 @@ export async function updateDatabase(id: number, data: Partial<{
   port: number;
   dbType: string;
   version: string;
-  schemaName: string;
+  sid: string;
   connectionString: string;
   isActive: boolean;
 }>) {

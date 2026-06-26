@@ -20,7 +20,7 @@ if "%~1" neq "" (
 :menu
 cls
 echo ===================================================
-echo 🔱 FinOps Portal Management Console
+echo FinOps Portal Management Console
 echo ===================================================
 echo  1. Start All Services (DB, Backend, Frontend)
 echo  2. Stop All Services
@@ -46,7 +46,7 @@ goto :menu
 :start_services
 echo.
 echo ===================================================
-echo 🚀 Launching FinOps Portal Services
+echo Launching FinOps Portal Services
 echo ===================================================
 call :start_services_core
 if %errorlevel% neq 0 (
@@ -65,7 +65,7 @@ goto :menu
 :stop_services
 echo.
 echo ===================================================
-echo 🛑 Stopping All FinOps Portal Services
+echo Stopping All FinOps Portal Services
 echo ===================================================
 call :stop_services_core
 echo.
@@ -78,7 +78,7 @@ goto :menu
 :restart_services
 echo.
 echo ===================================================
-echo 🔄 Restarting All FinOps Portal Services
+echo Restarting All FinOps Portal Services
 echo ===================================================
 call :stop_services_core
 echo.
@@ -159,7 +159,7 @@ exit /b 0
 :monitor_services
 echo.
 echo ===================================================
-echo 🔍 Service Monitoring & Status Check
+echo Service Monitoring and Status Check
 echo ===================================================
 
 :: 1. Database Check
@@ -195,7 +195,7 @@ goto :menu
 :db_start
 echo.
 echo ===================================================
-echo 🐘 Starting FinOps Portal PostgreSQL Database...
+echo Starting FinOps Portal PostgreSQL Database...
 echo ===================================================
 docker info >nul 2>&1
 if %errorlevel% neq 0 (
@@ -219,7 +219,7 @@ goto :menu
 :db_stop
 echo.
 echo ===================================================
-echo 🐘 Stopping FinOps Portal PostgreSQL Database...
+echo Stopping FinOps Portal PostgreSQL Database...
 echo ===================================================
 cd db
 docker compose down
@@ -237,7 +237,7 @@ goto :menu
 :db_logs
 echo.
 echo ===================================================
-echo 📋 PostgreSQL Container Logs
+echo PostgreSQL Container Logs
 echo ===================================================
 cd db
 docker compose logs --tail=50

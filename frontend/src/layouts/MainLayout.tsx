@@ -2,14 +2,20 @@ import { Outlet } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import Sidebar from '../components/common/Sidebar';
 import Navbar from '../components/common/Navbar';
+import { useSidebar } from '../contexts/useSidebar';
 
 export default function MainLayout() {
+  const { collapsed } = useSidebar();
+
   return (
     <div className="min-h-screen bg-surface-950">
       <Sidebar />
 
-      {/* Main content area — offset by sidebar width */}
-      <div className="ml-[240px] transition-all duration-200">
+      {/* Main content area — dynamically tracks sidebar width */}
+      <motion.div
+        animate={{ marginLeft: collapsed ? 64 : 240 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+      >
         <Navbar />
         <motion.main
           initial={{ opacity: 0, y: 8 }}
@@ -19,7 +25,7 @@ export default function MainLayout() {
         >
           <Outlet />
         </motion.main>
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -60,7 +60,7 @@ export interface DatabaseInstance {
   port: number;
   dbType: string;
   version: string | null;
-  schemaName: string | null;
+  sid: string | null;
   connectionString: string | null;
   isActive: boolean;
 }

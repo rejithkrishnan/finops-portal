@@ -17,6 +17,9 @@ import Modal from '../components/common/Modal';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 
+// Shared error shape for Axios-style API responses
+type ApiError = { response?: { data?: { error?: { message?: string } } } };
+
 // ─── Animated Counter ─────────────────────────────────────────────
 function AnimatedCounter({ value, duration = 800 }: { value: number; duration?: number }) {
   const [display, setDisplay] = useState(0);
@@ -84,13 +87,14 @@ function RoleBadge({ name, color }: { name: string; color: string }) {
 
 // ─── Environment Detail Card ──────────────────────────────────────
 function EnvironmentCard({
-  env, roles, onRefresh, isAdmin, onEditEnv, onCollapse, searchQuery,
+  env, roles, onRefresh, isAdmin, onEditEnv, onDeleteEnv, onCollapse, searchQuery,
 }: {
   env: Environment;
   roles: ServerRole[];
   onRefresh: () => void;
   isAdmin: boolean;
   onEditEnv: (env: Environment) => void;
+  onDeleteEnv: (envId: number) => void;
   onCollapse: (envId: number) => void;
   searchQuery: string;
 }) {
@@ -118,7 +122,7 @@ function EnvironmentCard({
     return d.name.toLowerCase().includes(q) ||
            d.host.includes(q) ||
            d.dbType.toLowerCase().includes(q) ||
-           (d.schemaName && d.schemaName.toLowerCase().includes(q));
+           (d.sid && d.sid.toLowerCase().includes(q));
   }) || [];
 
   const handleAddServer = async (data: {
@@ -136,7 +140,7 @@ function EnvironmentCard({
       setShowAddServer(false);
       onRefresh();
     } catch (err) {
-      const error = err as { response?: { data?: { error?: { message?: string } } } };
+      const error = err as ApiError;
       toast.error(error.response?.data?.error?.message || 'Failed to add server');
     }
   };
@@ -158,7 +162,7 @@ function EnvironmentCard({
       setSelectedServerForEdit(null);
       onRefresh();
     } catch (err) {
-      const error = err as { response?: { data?: { error?: { message?: string } } } };
+      const error = err as ApiError;
       toast.error(error.response?.data?.error?.message || 'Failed to update server');
     }
   };
@@ -180,7 +184,7 @@ function EnvironmentCard({
     port: string;
     dbType: string;
     version?: string;
-    schemaName?: string;
+    sid?: string;
     connectionString?: string;
   }) => {
     try {
@@ -189,7 +193,7 @@ function EnvironmentCard({
       setShowAddDb(false);
       onRefresh();
     } catch (err) {
-      const error = err as { response?: { data?: { error?: { message?: string } } } };
+      const error = err as ApiError;
       toast.error(error.response?.data?.error?.message || 'Failed to add database');
     }
   };
@@ -200,7 +204,7 @@ function EnvironmentCard({
     port: string;
     dbType: string;
     version?: string;
-    schemaName?: string;
+    sid?: string;
     connectionString?: string;
   }>) => {
     if (!selectedDbForEdit) return;
@@ -211,7 +215,7 @@ function EnvironmentCard({
       setSelectedDbForEdit(null);
       onRefresh();
     } catch (err) {
-      const error = err as { response?: { data?: { error?: { message?: string } } } };
+      const error = err as ApiError;
       toast.error(error.response?.data?.error?.message || 'Failed to update database');
     }
   };
@@ -235,7 +239,7 @@ function EnvironmentCard({
       id={`env-${env.id}`}
     >
       {/* Header */}
-      <div className="px-5 py-4 border-b border-surface-700/30 flex items-center justify-between">
+      <div className="px-4 sm:px-5 py-4 border-b border-surface-700/30 flex flex-wrap items-center justify-between gap-2">
         <div className="flex items-center gap-3">
           <div className={`w-2.5 h-2.5 rounded-full ${env.isActive ? 'bg-emerald-400 animate-pulse-subtle' : 'bg-surface-600'}`} />
           <div>
@@ -245,16 +249,25 @@ function EnvironmentCard({
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-2 text-xs">
-            <span className="px-2 py-0.5 rounded bg-surface-700/50 text-surface-400">{env.envType}</span>
+            <span className="surface-pill px-2 py-0.5 rounded text-xs font-medium">{env.envType}</span>
           </div>
           {isAdmin && (
-            <button
-              onClick={() => onEditEnv(env)}
-              className="p-1.5 rounded hover:bg-surface-800 text-surface-400 hover:text-surface-200 transition-colors"
-              title="Edit Environment"
-            >
-              <Edit3 size={15} />
-            </button>
+            <>
+              <button
+                onClick={() => onEditEnv(env)}
+                className="p-1.5 rounded hover:bg-surface-800 text-surface-400 hover:text-brand-400 transition-colors"
+                title="Edit Environment"
+              >
+                <Edit3 size={15} />
+              </button>
+              <button
+                onClick={() => onDeleteEnv(env.id)}
+                className="p-1.5 rounded hover:bg-red-500/10 text-surface-400 hover:text-red-400 transition-colors"
+                title="Delete Environment"
+              >
+                <Trash2 size={15} />
+              </button>
+            </>
           )}
           <button
             onClick={() => onCollapse(env.id)}
@@ -267,7 +280,7 @@ function EnvironmentCard({
       </div>
 
       {/* Content: Unified Servers & Databases View */}
-      <div className="p-5 space-y-6">
+      <div className="p-3 sm:p-5 space-y-6">
         
         {/* ─── SERVERS SECTION ─── */}
         <div className="space-y-3">
@@ -275,7 +288,7 @@ function EnvironmentCard({
             <div className="flex items-center gap-2">
               <Monitor size={16} className="text-brand-400" />
               <h4 className="font-semibold text-sm text-surface-200">Servers</h4>
-              <span className="px-2 py-0.5 rounded-full text-xs bg-surface-800 text-surface-400 font-medium">
+              <span className="surface-pill px-2 py-0.5 rounded-full text-xs font-medium">
                 {env.servers?.length || 0}
               </span>
             </div>
@@ -293,8 +306,8 @@ function EnvironmentCard({
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto -mx-3 sm:mx-0">
+            <table className="w-full min-w-[640px] text-sm">
               <thead>
                 <tr className="text-xs uppercase text-surface-500 tracking-wider">
                   <th className="text-left px-4 py-2.5 font-medium">Hostname</th>
@@ -362,7 +375,7 @@ function EnvironmentCard({
             <div className="flex items-center gap-2">
               <HardDrive size={16} className="text-brand-400" />
               <h4 className="font-semibold text-sm text-surface-200">Databases</h4>
-              <span className="px-2 py-0.5 rounded-full text-xs bg-surface-800 text-surface-400 font-medium">
+              <span className="surface-pill px-2 py-0.5 rounded-full text-xs font-medium">
                 {env.databases?.length || 0}
               </span>
             </div>
@@ -380,8 +393,8 @@ function EnvironmentCard({
             </div>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto -mx-3 sm:mx-0">
+            <table className="w-full min-w-[560px] text-sm">
               <thead>
                 <tr className="text-xs uppercase text-surface-500 tracking-wider">
                   <th className="text-left px-4 py-2.5 font-medium">Name</th>
@@ -389,7 +402,7 @@ function EnvironmentCard({
                   <th className="text-left px-4 py-2.5 font-medium">Port</th>
                   <th className="text-left px-4 py-2.5 font-medium">Type</th>
                   <th className="text-left px-4 py-2.5 font-medium">Version</th>
-                  <th className="text-left px-4 py-2.5 font-medium">Schema</th>
+                  <th className="text-left px-4 py-2.5 font-medium">SID</th>
                   {isAdmin && <th className="text-right px-4 py-2.5 font-medium">Actions</th>}
                 </tr>
               </thead>
@@ -403,7 +416,7 @@ function EnvironmentCard({
                       <RoleBadge name={db.dbType} color="#f43f5e" />
                     </td>
                     <td className="px-4 py-2 text-surface-400">{db.version || '—'}</td>
-                    <td className="px-4 py-2 text-surface-400">{db.schemaName || '—'}</td>
+                    <td className="px-4 py-2 text-surface-400">{db.sid || '—'}</td>
                     {isAdmin && (
                       <td className="px-4 py-2 text-right">
                         <div className="flex justify-end gap-1">
@@ -560,7 +573,7 @@ function DatabaseForm({
     port: string;
     dbType: string;
     version?: string;
-    schemaName?: string;
+    sid?: string;
     connectionString?: string;
   }) => void;
   onCancel: () => void;
@@ -572,7 +585,7 @@ function DatabaseForm({
     port: initialData?.port?.toString() || '1521',
     dbType: initialData?.dbType || 'Oracle',
     version: initialData?.version || '',
-    schemaName: initialData?.schemaName || '',
+    sid: initialData?.sid || '',
     connectionString: initialData?.connectionString || '',
   });
 
@@ -583,7 +596,7 @@ function DatabaseForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-surface-400">Name *</label>
           <input className="input-field" value={form.name} onChange={e => setForm({...form, name: e.target.value})} required />
@@ -605,8 +618,8 @@ function DatabaseForm({
           <input className="input-field" value={form.version} onChange={e => setForm({...form, version: e.target.value})} />
         </div>
         <div className="space-y-1.5">
-          <label className="text-sm font-medium text-surface-400">Schema</label>
-          <input className="input-field" value={form.schemaName} onChange={e => setForm({...form, schemaName: e.target.value})} />
+          <label className="text-sm font-medium text-surface-400">SID</label>
+          <input className="input-field" value={form.sid} onChange={e => setForm({...form, sid: e.target.value})} />
         </div>
       </div>
       <div className="space-y-1.5">
@@ -707,7 +720,7 @@ function EnvironmentForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <label className="text-sm font-medium text-surface-400">Environment Name *</label>
           <input
@@ -825,8 +838,7 @@ export default function EnvironmentsPage() {
     }
   }, []);
 
-  // eslint-disable-next-line react-hooks/set-state-in-effect
-  useEffect(() => { loadData(); }, [loadData]);
+  useEffect(() => { loadData(); }, [loadData]); // eslint-disable-line react-hooks/set-state-in-effect
 
   const handleAddApp = async (data: { name: string; description?: string }) => {
     try {
@@ -835,7 +847,7 @@ export default function EnvironmentsPage() {
       setShowAddApp(false);
       loadData();
     } catch (err) {
-      const error = err as { response?: { data?: { error?: { message?: string } } } };
+      const error = err as ApiError;
       toast.error(error.response?.data?.error?.message || 'Failed to add section');
     }
   };
@@ -849,8 +861,19 @@ export default function EnvironmentsPage() {
       setSelectedAppForEdit(null);
       loadData();
     } catch (err) {
-      const error = err as { response?: { data?: { error?: { message?: string } } } };
+      const error = err as ApiError;
       toast.error(error.response?.data?.error?.message || 'Failed to update section');
+    }
+  };
+
+  const handleDeleteApp = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this section and all its environments?')) return;
+    try {
+      await envService.deleteApplication(id);
+      toast.success('Section deleted successfully');
+      loadData();
+    } catch {
+      toast.error('Failed to delete section');
     }
   };
 
@@ -872,7 +895,7 @@ export default function EnvironmentsPage() {
       setSelectedAppForNewEnv(null);
       loadData();
     } catch (err) {
-      const error = err as { response?: { data?: { error?: { message?: string } } } };
+      const error = err as ApiError;
       toast.error(error.response?.data?.error?.message || 'Failed to add environment');
     }
   };
@@ -892,8 +915,24 @@ export default function EnvironmentsPage() {
       setSelectedEnvForEdit(null);
       loadData();
     } catch (err) {
-      const error = err as { response?: { data?: { error?: { message?: string } } } };
+      const error = err as ApiError;
       toast.error(error.response?.data?.error?.message || 'Failed to update environment');
+    }
+  };
+
+  const handleDeleteEnv = async (id: number) => {
+    if (!confirm('Are you sure you want to delete this environment and all its servers and databases?')) return;
+    try {
+      await envService.deleteEnvironment(id);
+      toast.success('Environment deleted successfully');
+      setExpandedEnvs(prev => {
+        const copy = { ...prev };
+        delete copy[id];
+        return copy;
+      });
+      loadData();
+    } catch {
+      toast.error('Failed to delete environment');
     }
   };
 
@@ -931,12 +970,12 @@ export default function EnvironmentsPage() {
   if (loading) {
     return (
       <div className="space-y-6">
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="glass-card p-5 h-24 shimmer rounded-xl" />
           ))}
         </div>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="glass-card p-5 h-64 shimmer rounded-xl" />
           ))}
@@ -977,7 +1016,7 @@ export default function EnvironmentsPage() {
           d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           d.host.includes(searchQuery.toLowerCase()) ||
           d.dbType.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          (d.schemaName && d.schemaName.toLowerCase().includes(searchQuery.toLowerCase()))
+          (d.sid && d.sid.toLowerCase().includes(searchQuery.toLowerCase()))
         );
         if (dbMatches) return true;
       }
@@ -994,7 +1033,7 @@ export default function EnvironmentsPage() {
   return (
     <div className="space-y-6">
       {/* ─── Summary Cards ──────────────────────────────────────── */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <SummaryCard icon={AppWindow} label="Applications" value={dashboard?.summary.applications || 0} color={theme === 'light' ? '#97144d' : '#00c5a0'} delay={0} />
         <SummaryCard icon={Globe} label="Environments" value={dashboard?.summary.environments || 0} color={theme === 'light' ? '#db2777' : '#10b981'} delay={0.05} />
         <SummaryCard icon={ServerIcon} label="Servers" value={dashboard?.summary.servers || 0} color={theme === 'light' ? '#008269' : '#06b6d4'} delay={0.1} />
@@ -1002,7 +1041,7 @@ export default function EnvironmentsPage() {
       </div>
 
       {/* ─── Charts Row ─────────────────────────────────────────── */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Servers per Environment */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
@@ -1149,9 +1188,9 @@ export default function EnvironmentsPage() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.35, duration: 0.3 }}
-        className="flex items-center justify-between border-b border-surface-700/30 pb-3 mb-4"
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-surface-700/30 pb-3 mb-4"
       >
-        <div>
+        <div className="min-w-0">
           <h2 className="text-xl font-bold text-surface-100">Applications & Environments</h2>
           <p className="text-sm text-surface-500">Configure sections and environment instances.</p>
         </div>
@@ -1178,13 +1217,13 @@ export default function EnvironmentsPage() {
         </div>
       </motion.div>
 
-      <div className="flex gap-6">
-        {/* Jump-To Sidebar */}
+      <div className="flex flex-col lg:flex-row gap-6">
+        {/* Jump-To Sidebar — hidden on mobile, visible on lg+ */}
         <motion.div
           initial={{ opacity: 0, x: -15 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.35 }}
-          className="w-56 flex-shrink-0"
+          className="hidden lg:block w-56 flex-shrink-0"
         >
           <div className="glass-card p-4 sticky top-24">
             <h4 className="text-xs font-semibold text-surface-500 uppercase tracking-wider mb-3">Jump To</h4>
@@ -1213,7 +1252,7 @@ export default function EnvironmentsPage() {
                               onClick={() => scrollToEnv(env.id)}
                               className={`w-full text-left px-2 py-1 rounded text-xs transition-colors flex items-center gap-2 ${
                                 expandedEnvs[env.id]
-                                  ? 'text-brand-400 bg-brand-500/10'
+                                  ? 'text-brand-500 dark:text-brand-400 font-semibold bg-transparent'
                                   : 'text-surface-500 hover:text-surface-300 hover:bg-surface-800/30'
                               }`}
                             >
@@ -1240,18 +1279,28 @@ export default function EnvironmentsPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 + index * 0.1, duration: 0.3 }}
             >
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-400">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center text-brand-400 flex-shrink-0">
                     <AppWindow size={18} />
                   </div>
-                  <h2 className="text-lg font-semibold text-surface-200">{app.name}</h2>
-                  <span className="text-xs text-surface-500">
+                  <h2 className="text-lg font-semibold text-surface-200 truncate">{app.name}</h2>
+                  <span className="text-xs text-surface-500 flex-shrink-0">
                     {app.environments.length} environment{app.environments.length !== 1 ? 's' : ''}
                   </span>
                 </div>
                 {isAdmin && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => {
+                        setSelectedAppForNewEnv(app);
+                        setShowAddEnv(true);
+                      }}
+                      className="p-1 rounded hover:bg-surface-800 text-surface-400 hover:text-brand-400 transition-colors"
+                      title="Add Environment"
+                    >
+                      <Plus size={15} />
+                    </button>
                     <button
                       onClick={() => {
                         setSelectedAppForEdit(app);
@@ -1263,14 +1312,11 @@ export default function EnvironmentsPage() {
                       <Edit3 size={15} />
                     </button>
                     <button
-                      onClick={() => {
-                        setSelectedAppForNewEnv(app);
-                        setShowAddEnv(true);
-                      }}
-                      className="btn-secondary text-xs py-1.5 px-3 flex items-center gap-1"
+                      onClick={() => handleDeleteApp(app.id)}
+                      className="p-1 rounded hover:bg-red-500/10 text-surface-400 hover:text-red-400 transition-colors"
+                      title="Delete Section"
                     >
-                      <Plus size={14} />
-                      Add Environment
+                      <Trash2 size={15} />
                     </button>
                   </div>
                 )}
@@ -1291,19 +1337,19 @@ export default function EnvironmentsPage() {
                       {!env && (
                         <motion.button
                           onClick={() => loadEnvironment(envSummary.id)}
-                          className="w-full glass-card-hover p-4 text-left flex items-center justify-between group"
+                          className="w-full glass-card-hover p-4 text-left flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 group"
                         >
-                          <div className="flex items-center gap-3">
-                            <div className={`w-2 h-2 rounded-full ${envSummary.isActive ? 'bg-emerald-400' : 'bg-surface-600'}`} />
-                            <div>
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className={`w-2 h-2 rounded-full flex-shrink-0 ${envSummary.isActive ? 'bg-emerald-400' : 'bg-surface-600'}`} />
+                            <div className="min-w-0">
                               <span className="font-medium text-surface-200 group-hover:text-surface-100">
                                 {envSummary.name}
                               </span>
-                              <span className="text-surface-600 mx-2">•</span>
-                              <span className="text-sm text-surface-500">{envSummary.description}</span>
+                              <span className="text-surface-600 mx-2 hidden sm:inline">•</span>
+                              <span className="text-sm text-surface-500 hidden sm:inline">{envSummary.description}</span>
                             </div>
                           </div>
-                          <div className="flex items-center gap-3 text-xs text-surface-500">
+                          <div className="flex items-center gap-3 text-xs text-surface-500 flex-shrink-0">
                             <span className="flex items-center gap-1"><Monitor size={12} /> {envSummary._count.servers}</span>
                             <span className="flex items-center gap-1"><HardDrive size={12} /> {envSummary._count.databases}</span>
                             <ChevronRight size={14} className="text-surface-600 group-hover:text-surface-400 transition-colors" />
@@ -1328,6 +1374,7 @@ export default function EnvironmentsPage() {
                             setSelectedEnvForEdit(e);
                             setShowEditEnv(true);
                           }}
+                          onDeleteEnv={handleDeleteEnv}
                           onCollapse={loadEnvironment}
                           searchQuery={searchQuery}
                         />

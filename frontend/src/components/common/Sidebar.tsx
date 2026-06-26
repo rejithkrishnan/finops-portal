@@ -10,7 +10,7 @@ import {
   ChevronRight,
   Settings,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useSidebar } from '../../contexts/useSidebar';
 
 const navItems = [
   { path: '/', icon: LayoutDashboard, label: 'Dashboard', disabled: false },
@@ -21,7 +21,7 @@ const navItems = [
 ];
 
 export default function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+  const { collapsed, setCollapsed } = useSidebar();
   const location = useLocation();
 
   return (

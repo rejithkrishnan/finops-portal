@@ -68,12 +68,12 @@ export const getDatabases = (envId: number) =>
 
 export const createDatabase = (envId: number, data: {
   name: string; host: string; port: number; dbType: string;
-  version?: string; schemaName?: string; connectionString?: string;
+  version?: string; sid?: string; connectionString?: string;
 }) => api.post<ApiResponse<DatabaseInstance>>(`/environments/${envId}/databases`, data).then(r => r.data.data);
 
 export const updateDatabase = (id: number, data: Partial<{
   name: string; host: string; port: number; dbType: string;
-  version: string; schemaName: string; connectionString: string;
+  version: string; sid: string; connectionString: string;
 }>) => api.put<ApiResponse<DatabaseInstance>>(`/databases/${id}`, data).then(r => r.data.data);
 
 export const deleteDatabase = (id: number) =>
